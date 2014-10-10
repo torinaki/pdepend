@@ -100,8 +100,20 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
 
         $actual   = array();
         $expected = array(
-            'pdepend1' => array('ccn' => 5, 'ccn2' => 6),
-            'pdepend2' => array('ccn' => 7, 'ccn2' => 10)
+            'pdepend1' => array(
+                'hcn'  => 5,
+                'otc'  => 6,
+                'odc'  => 6,
+                'dotc' => 6,
+                'dodc' => 6,
+            ),
+            'pdepend2' => array(
+                'hcn'  => 5,
+                'otc'  => 6,
+                'odc'  => 6,
+                'dotc' => 6,
+                'dodc' => 6,
+            )
         );
 
         foreach ($namespaces[0]->getFunctions() as $function) {

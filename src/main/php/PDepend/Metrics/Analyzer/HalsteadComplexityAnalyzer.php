@@ -76,6 +76,14 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
 
     const M_OPERANDS_COUNT = 'odc';
 
+    const M_DISTINCT_OPERATORS_COUNT = 'dotc';
+
+    const M_DISTINCT_OPERANDS_COUNT = 'dodc';
+
+    private $operatorsDictionary = array();
+
+    private $operandsDictionary = array();
+
     /**
      * The project Halstead Complexity Number.
      *
@@ -97,6 +105,8 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
 
             // Init node metrics
             $this->metrics = array();
+            $this->operatorsDictionary = array();
+            $this->operandsDictionary = array();
 
             foreach ($namespaces as $namespace) {
                 $namespace->accept($this);
@@ -224,6 +234,10 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     {
         $data = array(
             self::M_HALSTEAD_COMPLEXITY => 0,
+            self::M_OPERATORS_COUNT => 0,
+            self::M_OPERANDS_COUNT => 0,
+            self::M_DISTINCT_OPERATORS_COUNT => 0,
+            self::M_DISTINCT_OPERANDS_COUNT => 0,
         );
 
         $children = $callable->getChildren();
@@ -232,6 +246,10 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
                 $data = $child->accept($this, $data);
             }
         }
+
+        $data[self::M_HALSTEAD_COMPLEXITY] =
+            ($data[self::M_OPERATORS_COUNT] + $data[self::M_OPERANDS_COUNT]) *
+            log($data[self::M_DISTINCT_OPERATORS_COUNT] + $data[self::M_DISTINCT_OPERANDS_COUNT], 2);
 
         $this->metrics[$callable->getId()] = $data;
     }
@@ -247,7 +265,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     private function updateProjectMetrics($nodeId)
     {
-        $this->hcn  += $this->metrics[$nodeId][self::M_HALSTEAD_COMPLEXITY];
+        //$this->hcn  += $this->metrics[$nodeId][self::M_HALSTEAD_COMPLEXITY];
     }
 
     /**
@@ -261,8 +279,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitBooleanAndExpression($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -276,8 +293,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitBooleanOrExpression($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -291,11 +307,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitSwitchLabel($node, $data)
     {
-        if (!$node->isDefault()) {
-            ++$data[self::M_CYCLOMATIC_COMPLEXITY_1];
-            ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-        }
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -309,10 +321,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitCatchStatement($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_1];
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -326,10 +335,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitElseIfStatement($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_1];
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -343,10 +349,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitForStatement($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_1];
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -360,10 +363,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitForeachStatement($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_1];
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -377,10 +377,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitIfStatement($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_1];
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -394,8 +391,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitLogicalAndExpression($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -409,25 +405,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitLogicalOrExpression($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-        return $this->visit($node, $data);
-    }
-
-    /**
-     * Visits a ternary operator.
-     *
-     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
-     * @param array(string=>integer)   $data The previously calculated ccn values.
-     *
-     * @return array(string=>integer)
-     * @since 0.9.8
-     */
-    public function visitConditionalExpression($node, $data)
-    {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_1];
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -441,10 +419,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitWhileStatement($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_1];
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
-
-        return $this->visit($node, $data);
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
     /**
@@ -458,9 +433,84 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitDoWhileStatement($node, $data)
     {
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_1];
-        ++$data[self::M_CYCLOMATIC_COMPLEXITY_2];
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
 
+    /**
+     * Each line contain end of line operator ";"
+     *
+     * @param $node
+     * @param $data
+     *
+     * @return mixed
+     */
+    public function visitStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, ';'));
+    }
+
+    public function visitAssignmentExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitVariable($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
+    }
+
+    public function visitLiteral($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
+    }
+
+    /**
+     * Visits a ternary operator.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     */
+    public function visitExpression($node, $data)
+    {
+        $image = $node->getImage();
+        if ($image) {
+            $this->incrementOperatorCount($data, $image);
+        }
         return $this->visit($node, $data);
+    }
+
+    /**
+     * Visits a ternary operator.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     */
+    public function visitConditionalExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    private function incrementOperatorCount($data, $operator)
+    {
+        ++$data[self::M_OPERATORS_COUNT];
+        if (!in_array($operator, $this->operatorsDictionary)) {
+            $this->operatorsDictionary[] = $operator;
+            ++$data[self::M_DISTINCT_OPERATORS_COUNT];
+        }
+        return $data;
+    }
+
+    private function incrementOperandCount($data, $operand)
+    {
+        ++$data[self::M_OPERANDS_COUNT];
+        if (!in_array($operand, $this->operandsDictionary)) {
+            $this->operandsDictionary[] = $operand;
+            ++$data[self::M_DISTINCT_OPERANDS_COUNT];
+        }
+        return $data;
     }
 }

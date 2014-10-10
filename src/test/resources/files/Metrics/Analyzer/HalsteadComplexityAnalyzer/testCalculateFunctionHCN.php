@@ -3,6 +3,9 @@ function pdepend1($x, $y)
 {
     $a = 1 + 1;
     $a = ' ' . ' ';
+    $a += (9 + 1);
+    $a += (9 + 1);
+    $a = true ? 1 : 2 ;
     switch ($x) {
     case 'a':
         if ($a === true) {
