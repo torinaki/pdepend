@@ -622,10 +622,15 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
 
     public function visitPreDecrementExpression($node, $data)
     {
-        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+        return $this->visit($node, $this->incrementOperatorCount($data, '--'));
     }
 
     public function visitPreIncrementExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, '++'));
+    }
+
+    public function visitPostfixExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }

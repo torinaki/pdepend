@@ -101,10 +101,10 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
         $actual   = array();
         $expected = array(
             'operators1' => array(
-                'hcn'  => (19 + 16) * log(12 + 3, 2),
-                'otc'  => 19,
+                'hcn'  => (23 + 16) * log(14 + 3, 2),
+                'otc'  => 23,
                 'odc'  => 16,
-                'dotc' => 12,
+                'dotc' => 14,
                 'dodc' => 3,
             ),
             'operators2' => array(

@@ -1,7 +1,7 @@
 <?php
 function operators1()
 {
-    $a = ($a * $a) + $a;
+    $a = (--$a++ * ++$a--) + $a;
     @$a;
     // String
     <<<EOD
