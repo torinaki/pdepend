@@ -49,9 +49,11 @@ use PDepend\Source\AST\AbstractASTCallable;
 use PDepend\Source\AST\ASTArtifact;
 use PDepend\Source\AST\ASTArtifactList;
 use PDepend\Source\AST\ASTFunction;
+use PDepend\Source\AST\ASTIfStatement;
 use PDepend\Source\AST\ASTInterface;
 use PDepend\Source\AST\ASTMethod;
 use PDepend\Source\AST\ASTScope;
+use PDepend\Source\AST\ASTScopeStatement;
 
 /**
  * This class calculates the Halstead Complexity Number(HCN) for the project,
@@ -239,6 +241,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
             self::M_DISTINCT_OPERATORS_COUNT => 0,
             self::M_DISTINCT_OPERANDS_COUNT => 0,
         );
+        $this->operandsDictionary = $this->operatorsDictionary = array();
 
         $children = $callable->getChildren();
         if (isset($children[1]) && $children[1] instanceof ASTScope) {
@@ -310,6 +313,11 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    public function visitSwitchStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, 'switch'));
+    }
+
     /**
      * Visits a catch statement.
      *
@@ -320,6 +328,11 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      * @since 0.9.8
      */
     public function visitCatchStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitTryStatement($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
@@ -335,6 +348,12 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitElseIfStatement($node, $data)
     {
+        if ($node->hasElse()) {
+            $childNode = $node->getChild(2);
+            if ($childNode instanceof ASTIfStatement || $childNode instanceof ASTScopeStatement) {
+                $data = $this->incrementOperatorCount($data, 'else');
+            }
+        }
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
@@ -377,6 +396,12 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitIfStatement($node, $data)
     {
+        if ($node->hasElse()) {
+            $childNode = $node->getChild(2);
+            if ($childNode instanceof ASTIfStatement || $childNode instanceof ASTScopeStatement) {
+                $data = $this->incrementOperatorCount($data, 'else');
+            }
+        }
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
@@ -464,6 +489,16 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
     }
 
+    public function visitClassOrInterfaceReference($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
+    }
+
+    public function visitCloneExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
     /**
      * Visits a ternary operator.
      *
@@ -476,7 +511,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     {
         $image = $node->getImage();
         if ($image) {
-            $this->incrementOperatorCount($data, $image);
+            $data = $this->incrementOperatorCount($data, $image);
         }
         return $this->visit($node, $data);
     }
@@ -493,6 +528,46 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
+
+    public function visitUnaryExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitHeredoc($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, '<<<'));
+    }
+
+    public function visitArray($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, 'array'));
+    }
+
+    public function visitArrayElement($node, $data)
+    {
+        return $this->visit($node, $data);
+    }
+
+    public function visitArrayIndexExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, '[]'));
+    }
+
+    public function visitBreakStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitCastExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+//    public function visitCloneExpression($node, $data)
+//    {
+//        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
+//    }
 
     private function incrementOperatorCount($data, $operator)
     {
