@@ -41,6 +41,19 @@ function operators2() {
         
 }
 
+function operators3() {
+    $a = function () {
+        $a;
+        return $a;
+    };
+    return $a;
+}
+
+function classes() {
+    stdClass::method();
+    stdClass::class;
+    new stdClass();
+}
 //function pdepend2($x)
 //{
 //    foreach ($x as $y) {

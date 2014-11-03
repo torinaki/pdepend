@@ -114,6 +114,20 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
                 'dotc' => 12,
                 'dodc' => 5,
             ),
+            'operators3' => array(
+                'hcn'  => (8 + 4) * log(4 + 1, 2),
+                'otc'  => 8,
+                'odc'  => 4,
+                'dotc' => 4,
+                'dodc' => 1,
+            ),
+            'classes' => array(
+                'hcn'  => (6 + 4) * log(3 + 2, 2),
+                'otc'  => 6,
+                'odc'  => 4,
+                'dotc' => 3,
+                'dodc' => 2,
+            ),
         );
 
         foreach ($namespaces[0]->getFunctions() as $function) {

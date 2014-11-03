@@ -564,10 +564,36 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
-//    public function visitCloneExpression($node, $data)
-//    {
-//        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
-//    }
+    public function visitClosure($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, 'function'));
+    }
+
+    public function visitReturnStatement($node, $data)
+    {
+        $data = $this->incrementOperatorCount($data, ';');
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitMemberPrimaryPrefix($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitClassFqnPostfix($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
+    }
+
+    public function visitAllocationExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitClassReference($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
+    }
 
     private function incrementOperatorCount($data, $operator)
     {
