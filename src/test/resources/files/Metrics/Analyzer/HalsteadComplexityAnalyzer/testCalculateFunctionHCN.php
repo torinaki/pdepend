@@ -50,9 +50,11 @@ function operators3() {
 }
 
 function classes() {
-    stdClass::method();
-    stdClass::class;
-    new stdClass();
+    Foo::method();
+    Foo::class;
+    new Foo();
+    $foo->{$foo}();
+    Foo::$${$foo}();
 }
 //function pdepend2($x)
 //{

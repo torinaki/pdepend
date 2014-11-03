@@ -122,11 +122,11 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
                 'dodc' => 1,
             ),
             'classes' => array(
-                'hcn'  => (6 + 4) * log(3 + 2, 2),
-                'otc'  => 6,
-                'odc'  => 4,
-                'dotc' => 3,
-                'dodc' => 2,
+                'hcn'  => (13 + 9) * log(7 + 4, 2),
+                'otc'  => 13,
+                'odc'  => 9,
+                'dotc' => 7,
+                'dodc' => 4,
             ),
         );
 
