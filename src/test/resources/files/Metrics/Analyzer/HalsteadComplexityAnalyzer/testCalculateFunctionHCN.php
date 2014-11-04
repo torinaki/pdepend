@@ -49,13 +49,98 @@ function operators3() {
     return $a;
 }
 
-function classes() {
-    Foo::method();
-    Foo::class;
-    new Foo();
-    $foo->{$foo}();
-    Foo::$${$foo}();
-}
+//class TestClass extends stdClass
+//{class TestClass extends stdClass
+//{
+    function classes()
+    {
+        Foo::method();
+        Foo::class;
+        new Foo();
+        $foo->{$foo}();
+        Foo::$${$foo}();
+//        Foo::$bar();
+//        Foo::$$bar();
+//        Foo::$$$bar();
+//        parent::method();
+//        self::method();
+//        static::method();
+    }
+//}
+
+//function cycles()
+//{
+//    while (false) {
+//        continue;
+//    }
+//    do {
+//        break;
+//    } while (true);
+//    for ($i = 1; $i < 1; $i++) {
+//    }
+//}
+//
+//function others() {
+//    global $a;
+//    static $a;
+//    declare(ticks=42) {};
+//    echo "Hello world";
+//    eval('$a;');
+//    exit;
+//
+//    goto a;
+//    a:
+//    include "";
+//    include_once "";
+//    require "";
+//    require_once "";
+//    isset($a);
+//    unset($a);
+//    list($a) = $a;
+//    throw $a;
+//};
+//
+//function strings() {
+//    "...";
+//    "... $a ...";
+//    "... ${$a} ...";
+//}ction cycles()
+//{
+//    while (false) {
+//        continue;
+//    }
+//    do {
+//        break;
+//    } while (true);
+//    for ($i = 1; $i < 1; $i++) {
+//    }
+//}
+//
+//function others() {
+//    global $a;
+//    static $a;
+//    declare(ticks=42) {};
+//    echo "Hello world";
+//    eval('$a;');
+//    exit;
+//
+//    goto a;
+//    a:
+//    include "";
+//    include_once "";
+//    require "";
+//    require_once "";
+//    isset($a);
+//    unset($a);
+//    list($a) = $a;
+//    throw $a;
+//};
+//
+//function strings() {
+//    "...";
+//    "... $a ...";
+//    "... ${$a} ...";
+//}
 //function pdepend2($x)
 //{
 //    foreach ($x as $y) {

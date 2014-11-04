@@ -635,6 +635,196 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    public function visitConstantPostfix($node, $data)
+    {
+        return $this->visit($node, $data, $node->getImage());
+    }
+
+    public function visitArguments($node, $data)
+    {
+        return $this->visit($node, $data, $node->getImage());
+    }
+
+    public function visitComment($node, $data)
+    {
+        return $this->visit($node, $data, $node->getImage());
+    }
+
+    public function visitConstant($node, $data)
+    {
+        return $this->visit($node, $data, $node->getImage());
+    }
+
+    public function visitConstantDeclarator($node, $data)
+    {
+        return $this->visit($node, $data, $node->getImage());
+    }
+
+    public function visitConstantDefinition($node, $data)
+    {
+        return $this->visit($node, $data, $node->getImage());
+    }
+
+    public function visitContinueStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitDeclareStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitEchoStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitEvalExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitExitExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitFieldDeclaration($node, $data)
+    {
+        return $this->visit($node, $data);
+    }
+
+    public function visitForInit($node, $data)
+    {
+        return $this->visit($node, $data);
+    }
+
+    public function visitFormalParameter($node, $data)
+    {
+        return $this->visit($node, $data);
+    }
+
+    public function visitFormalParameters($node, $data)
+    {
+        return $this->visit($node, $data);
+    }
+
+    public function visitForUpdate($node, $data)
+    {
+        return $this->visit($node, $data);
+    }
+
+    public function visitFunctionPostfix($node, $data)
+    {
+        return $this->visit($node, $data);
+    }
+
+    public function visitGlobalStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitGotoStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitIncludeExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitInstanceOfExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitIssetExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitLabelStatement($node, $data)
+    {
+        return $this->visit($node, $data, $node->getImage());
+    }
+
+    public function visitListExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitLogicalXorExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitParentReference($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitPrimitiveType($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitPropertyPostfix($node, $data)
+    {
+        return $this->visit($node, $data, $node->getImage());
+    }
+
+    public function visitRequireExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitSelfReference($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitShiftLeftExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitShiftRightExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitStaticReference($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitStaticVariableDeclaration($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitString($node, $data)
+    {
+        return $this->visit($node, $data);
+    }
+
+    public function visitStringIndexExpression($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, '{}'));
+    }
+
+    public function visitThrowStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    public function visitUnsetStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
     private function incrementOperatorCount($data, $operator)
     {
         ++$data[self::M_OPERATORS_COUNT];

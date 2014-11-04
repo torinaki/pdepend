@@ -128,6 +128,47 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
                 'dotc' => 7,
                 'dodc' => 4,
             ),
+//            'cycles' => array(
+//                'hcn'  => (13 + 9) * log(7 + 4, 2),
+//                'otc'  => 13,
+//                'odc'  => 9,
+//                'dotc' => 7,
+//                'dodc' => 4,
+//            ),
+//            'others' => array(
+//                'hcn'  => (13 + 9) * log(7 + 4, 2),
+//                'otc'  => 13,
+//                'odc'  => 9,
+//                'dotc' => 7,
+//                'dodc' => 4,
+//            ),
+//            'strings' => array(
+//                'hcn'  => (13 + 9) * log(7 + 4, 2),
+//                'otc'  => 13,
+//                'odc'  => 9,
+//                'dotc' => 7,
+//                'dodc' => 4,
+//            ),            'cycles' => array(
+//                'hcn'  => (13 + 9) * log(7 + 4, 2),
+//                'otc'  => 13,
+//                'odc'  => 9,
+//                'dotc' => 7,
+//                'dodc' => 4,
+//            ),
+//            'others' => array(
+//                'hcn'  => (13 + 9) * log(7 + 4, 2),
+//                'otc'  => 13,
+//                'odc'  => 9,
+//                'dotc' => 7,
+//                'dodc' => 4,
+//            ),
+//            'strings' => array(
+//                'hcn'  => (13 + 9) * log(7 + 4, 2),
+//                'otc'  => 13,
+//                'odc'  => 9,
+//                'dotc' => 7,
+//                'dodc' => 4,
+//            ),
         );
 
         foreach ($namespaces[0]->getFunctions() as $function) {
