@@ -1,5 +1,5 @@
 <?php
-function operators1()
+function operators()
 {
     $a = (--$a++ * ++$a--) + $a;
     @$a;
@@ -15,7 +15,7 @@ EOD;
     clone $a;
 }
 
-function operators2() {
+function control_structures1() {
     try {
 
     } catch (\Exception $a) {
@@ -41,7 +41,22 @@ function operators2() {
         
 }
 
-function operators3() {
+function control_structures2()
+{
+    while (false) {
+        continue;                   // `;` will be ignored
+    }
+    do {
+        break;                      // `;` will be ignored
+    } while (true);                 // `;` will be ignored
+    for ($i = 1; $i < 1; $i++) {    // all `;` will be ignored
+    }
+    declare(ticks=42) {}            // directives will be ignored
+    goto a;                         // operator "goto" and operand "a", `;` will be ignored
+    a:                              // operand "a" and operator ":"
+}
+
+function closures() {
     $a = function () {
         $a;
         return $a;
@@ -49,111 +64,62 @@ function operators3() {
     return $a;
 }
 
-//class TestClass extends stdClass
-//{class TestClass extends stdClass
-//{
-    function classes()
+function others() {
+    static $a;
+    eval('$a;');                    // string of code will not be parsed
+    exit;
+    include "";
+    include_once "";
+    require "";
+    require_once "";
+    isset($a);
+    list($a) = $a;
+};
+
+function key_words ()
+{
+    global $a;                      // `;` will be ignored
+    unset($a);                      // `;` will be ignored
+    throw $a;                       // `;` will be ignored
+    echo "Hello world";             // `;` will be ignored
+}
+
+function strings() {
+    "...";
+    "... $a ...";           // operands "... ", $a, " ..."
+    "... ${$a} ...";        // operands "... ", $a, " ..."
+                            // operators $, {}
+}
+
+class TestClass extends stdClass
+{
+    protected $property = 'value';
+
+    function method()
     {
         Foo::method();
         Foo::class;
         new Foo();
         $foo->{$foo}();
         Foo::$${$foo}();
-//        Foo::$bar();
-//        Foo::$$bar();
-//        Foo::$$$bar();
-//        parent::method();
-//        self::method();
-//        static::method();
+        Foo::$foo();
+        Foo::$$foo();
+        Foo::$$$foo();
+        parent::method();   // `parent` operator
+        self::method();     // `self` operator
+        static::method();   // `static` operator
     }
-//}
+}
 
-//function cycles()
-//{
-//    while (false) {
-//        continue;
-//    }
-//    do {
-//        break;
-//    } while (true);
-//    for ($i = 1; $i < 1; $i++) {
-//    }
-//}
-//
-//function others() {
-//    global $a;
-//    static $a;
-//    declare(ticks=42) {};
-//    echo "Hello world";
-//    eval('$a;');
-//    exit;
-//
-//    goto a;
-//    a:
-//    include "";
-//    include_once "";
-//    require "";
-//    require_once "";
-//    isset($a);
-//    unset($a);
-//    list($a) = $a;
-//    throw $a;
-//};
-//
-//function strings() {
-//    "...";
-//    "... $a ...";
-//    "... ${$a} ...";
-//}ction cycles()
-//{
-//    while (false) {
-//        continue;
-//    }
-//    do {
-//        break;
-//    } while (true);
-//    for ($i = 1; $i < 1; $i++) {
-//    }
-//}
-//
-//function others() {
-//    global $a;
-//    static $a;
-//    declare(ticks=42) {};
-//    echo "Hello world";
-//    eval('$a;');
-//    exit;
-//
-//    goto a;
-//    a:
-//    include "";
-//    include_once "";
-//    require "";
-//    require_once "";
-//    isset($a);
-//    unset($a);
-//    list($a) = $a;
-//    throw $a;
-//};
-//
-//function strings() {
-//    "...";
-//    "... $a ...";
-//    "... ${$a} ...";
-//}
-//function pdepend2($x)
-//{
-//    foreach ($x as $y) {
-//        for ($i = 0; $i < $y; ++$i) {
-//            try {
-//                if ($x->get($i) === 0 and $x->get($i) > 23) {
-//                    return false;
-//                } else if ($x->get($i) === 1 || true) {
-//                    return true;
-//                } else if ($x->get($i) === 1 or false) {
-//                    return false;
-//                }
-//            } catch (Exception $e) {}
-//        }
-//    }
-//}
+trait TestTrait
+{
+    function method()
+    {
+        Foo::method();
+    }
+}
+
+interface TestInterface
+{
+    function method();
+}

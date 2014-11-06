@@ -48,12 +48,15 @@ use PDepend\Metrics\AnalyzerProjectAware;
 use PDepend\Source\AST\AbstractASTCallable;
 use PDepend\Source\AST\ASTArtifact;
 use PDepend\Source\AST\ASTArtifactList;
+use PDepend\Source\AST\ASTClass;
+use PDepend\Source\AST\ASTDeclareStatement;
 use PDepend\Source\AST\ASTFunction;
 use PDepend\Source\AST\ASTIfStatement;
 use PDepend\Source\AST\ASTInterface;
 use PDepend\Source\AST\ASTMethod;
 use PDepend\Source\AST\ASTScope;
 use PDepend\Source\AST\ASTScopeStatement;
+use PDepend\Source\AST\ASTTrait;
 
 /**
  * This class calculates the Halstead Complexity Number(HCN) for the project,
@@ -61,6 +64,8 @@ use PDepend\Source\AST\ASTScopeStatement;
  *
  * @copyright 2008-2014 Dmitry Balabka. All rights reserved.
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
+ *
+ * @method int visit() visit(\PDepend\Source\AST\ASTNode $int1, array $int2)
  */
 class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements AnalyzerNodeAware, AnalyzerProjectAware
 {
@@ -96,7 +101,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     /**
      * Processes all {@link \PDepend\Source\AST\ASTNamespace} code nodes.
      *
-     * @param \PDepend\Source\AST\ASTNamespace $namespaces
+     * @param \PDepend\Source\AST\ASTNamespace[] $namespaces
      * @return void
      */
     public function analyze($namespaces)
@@ -206,6 +211,46 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     {
         // Empty visit method, we don't want interface metrics
     }
+
+    /**
+     * Visits a class node.
+     *
+     * @param ASTClass $class
+     * @return void
+     */
+    public function visitClass(ASTClass $class)
+    {
+        $this->fireStartClass($class);
+
+        $class->getCompilationUnit()->accept($this);
+
+        foreach ($class->getMethods() as $method) {
+            $method->accept($this);
+        }
+
+        $this->fireEndClass($class);
+    }
+
+    /**
+     * Visits a trait node.
+     *
+     * @param \PDepend\Source\AST\ASTTrait $trait
+     * @return void
+     * @since 1.0.0
+     */
+    public function visitTrait(ASTTrait $trait)
+    {
+        $this->fireStartTrait($trait);
+
+        $trait->getCompilationUnit()->accept($this);
+
+        foreach ($trait->getMethods() as $method) {
+            $method->accept($this);
+        }
+
+        $this->fireEndTrait($trait);
+    }
+
 
     /**
      * Visits a method node.
@@ -332,6 +377,15 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitTryStatement($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
@@ -340,7 +394,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     /**
      * Visits an elseif statement.
      *
-     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param \PDepend\Source\AST\ASTElseIfStatement $node The currently visited node.
      * @param array(string=>integer)   $data The previously calculated ccn values.
      *
      * @return array(string=>integer)
@@ -388,7 +442,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     /**
      * Visits an if statement.
      *
-     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param \PDepend\Source\AST\ASTIfStatement $node The currently visited node.
      * @param array(string=>integer)   $data The previously calculated ccn values.
      *
      * @return array(string=>integer)
@@ -474,26 +528,71 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $this->visit($node, $this->incrementOperatorCount($data, ';'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitAssignmentExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitVariable($node, $data)
     {
         return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitLiteral($node, $data)
     {
         return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitClassOrInterfaceReference($node, $data)
     {
         return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitCloneExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
@@ -529,300 +628,844 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitUnaryExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitHeredoc($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, '<<<'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitArray($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, 'array'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitArrayElement($node, $data)
     {
         return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitArrayIndexExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, '[]'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitBreakStatement($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitCastExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitClosure($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, 'function'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitReturnStatement($node, $data)
     {
         $data = $this->incrementOperatorCount($data, ';');
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitMemberPrimaryPrefix($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitClassFqnPostfix($node, $data)
     {
         return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitAllocationExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitClassReference($node, $data)
     {
         return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitCompoundExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, '{}'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitCompoundVariable($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitMethodPostfix($node, $data)
     {
         return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitIdentifier($node, $data)
     {
         return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitVariableVariable($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, '${}'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitPreDecrementExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, '--'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitPreIncrementExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, '++'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitPostfixExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitConstantPostfix($node, $data)
     {
-        return $this->visit($node, $data, $node->getImage());
+        return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitArguments($node, $data)
     {
-        return $this->visit($node, $data, $node->getImage());
+        return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitComment($node, $data)
     {
-        return $this->visit($node, $data, $node->getImage());
+        return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitConstant($node, $data)
     {
-        return $this->visit($node, $data, $node->getImage());
+        return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitConstantDeclarator($node, $data)
     {
-        return $this->visit($node, $data, $node->getImage());
+        return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitConstantDefinition($node, $data)
     {
-        return $this->visit($node, $data, $node->getImage());
+        return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitContinueStatement($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * @param ASTDeclareStatement $node
+     * @param array $data
+     *
+     * @return mixed
+     */
     public function visitDeclareStatement($node, $data)
     {
-        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+        return $this->visit($node, $this->incrementOperatorCount($data, 'declare'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitEchoStatement($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitEvalExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitExitExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitFieldDeclaration($node, $data)
     {
         return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitForInit($node, $data)
     {
         return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitFormalParameter($node, $data)
     {
         return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitFormalParameters($node, $data)
     {
         return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitForUpdate($node, $data)
     {
         return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitFunctionPostfix($node, $data)
     {
         return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitGlobalStatement($node, $data)
     {
-        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+        return $this->visit($node, $this->incrementOperatorCount($data, 'global'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitGotoStatement($node, $data)
     {
-        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+        $data = $this->incrementOperatorCount($data, 'goto');
+        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitIncludeExpression($node, $data)
     {
-        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+        return $this->visit($node, $this->incrementOperatorCount($data, 'include'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitInstanceOfExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitIssetExpression($node, $data)
     {
-        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+        return $this->visit($node, $this->incrementOperatorCount($data, 'isset'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitLabelStatement($node, $data)
     {
-        return $this->visit($node, $data, $node->getImage());
+        $data = $this->incrementOperatorCount($data, ':');
+        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitListExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitLogicalXorExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitParentReference($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitPrimitiveType($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitPropertyPostfix($node, $data)
     {
-        return $this->visit($node, $data, $node->getImage());
+        return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitRequireExpression($node, $data)
     {
-        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+        return $this->visit($node, $this->incrementOperatorCount($data, 'require'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitSelfReference($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitShiftLeftExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitShiftRightExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitStaticReference($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitStaticVariableDeclaration($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
+    public function visitVariableDeclarator($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
+    }
+
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitString($node, $data)
     {
         return $this->visit($node, $data);
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitStringIndexExpression($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, '{}'));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitThrowStatement($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitUnsetStatement($node, $data)
     {
-        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+        return $this->visit($node, $this->incrementOperatorCount($data, 'unset'));
     }
 
     private function incrementOperatorCount($data, $operator)

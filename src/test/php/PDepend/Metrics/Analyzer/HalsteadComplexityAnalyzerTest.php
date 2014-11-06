@@ -100,81 +100,93 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
 
         $actual   = array();
         $expected = array(
-            'operators1' => array(
+            'operators' => array(
                 'hcn'  => (23 + 16) * log(14 + 3, 2),
                 'otc'  => 23,
                 'odc'  => 16,
                 'dotc' => 14,
                 'dodc' => 3,
             ),
-            'operators2' => array(
+            'control_structures1' => array(
                 'hcn'  => (14 + 10) * log(12 + 5, 2),
                 'otc'  => 14,
                 'odc'  => 10,
                 'dotc' => 12,
                 'dodc' => 5,
             ),
-            'operators3' => array(
+            'closures' => array(
                 'hcn'  => (8 + 4) * log(4 + 1, 2),
                 'otc'  => 8,
                 'odc'  => 4,
                 'dotc' => 4,
                 'dodc' => 1,
             ),
-            'classes' => array(
-                'hcn'  => (13 + 9) * log(7 + 4, 2),
-                'otc'  => 13,
-                'odc'  => 9,
-                'dotc' => 7,
+            'TestClass::method' => array(
+                'hcn'  => (31 + 18) * log(10 + 4, 2),
+                'otc'  => 31,
+                'odc'  => 18,
+                'dotc' => 10,
                 'dodc' => 4,
             ),
-//            'cycles' => array(
-//                'hcn'  => (13 + 9) * log(7 + 4, 2),
-//                'otc'  => 13,
-//                'odc'  => 9,
-//                'dotc' => 7,
-//                'dodc' => 4,
-//            ),
-//            'others' => array(
-//                'hcn'  => (13 + 9) * log(7 + 4, 2),
-//                'otc'  => 13,
-//                'odc'  => 9,
-//                'dotc' => 7,
-//                'dodc' => 4,
-//            ),
-//            'strings' => array(
-//                'hcn'  => (13 + 9) * log(7 + 4, 2),
-//                'otc'  => 13,
-//                'odc'  => 9,
-//                'dotc' => 7,
-//                'dodc' => 4,
-//            ),            'cycles' => array(
-//                'hcn'  => (13 + 9) * log(7 + 4, 2),
-//                'otc'  => 13,
-//                'odc'  => 9,
-//                'dotc' => 7,
-//                'dodc' => 4,
-//            ),
-//            'others' => array(
-//                'hcn'  => (13 + 9) * log(7 + 4, 2),
-//                'otc'  => 13,
-//                'odc'  => 9,
-//                'dotc' => 7,
-//                'dodc' => 4,
-//            ),
-//            'strings' => array(
-//                'hcn'  => (13 + 9) * log(7 + 4, 2),
-//                'otc'  => 13,
-//                'odc'  => 9,
-//                'dotc' => 7,
-//                'dodc' => 4,
-//            ),
+            'TestTrait::method' => array(
+                'hcn'  => (2 + 2) * log(2 + 2, 2),
+                'otc'  => 2,
+                'odc'  => 2,
+                'dotc' => 2,
+                'dodc' => 2,
+            ),
+            'control_structures2' => array(
+                'hcn'  => (11 + 9) * log(11 + 5, 2),
+                'otc'  => 11,
+                'odc'  => 9,
+                'dotc' => 11,
+                'dodc' => 5,
+            ),
+            'others' => array(
+                'hcn'  => (19 + 9) * log(9 + 3, 2),
+                'otc'  => 19,
+                'odc'  => 9,
+                'dotc' => 9,
+                'dodc' => 3,
+            ),
+            'key_words' => array(
+                'hcn'  => (4 + 4) * log(4 + 2, 2),
+                'otc'  => 4,
+                'odc'  => 4,
+                'dotc' => 4,
+                'dodc' => 2,
+            ),
+            'strings' => array(
+                'hcn'  => (5 + 7) * log(3 + 4, 2),
+                'otc'  => 5,
+                'odc'  => 7,
+                'dotc' => 3,
+                'dodc' => 4,
+            ),
+            'TestInterface::method' => array(),
         );
 
         foreach ($namespaces[0]->getFunctions() as $function) {
             $actual[$function->getName()] = $analyzer->getNodeMetrics($function);
         }
-
+        foreach ($namespaces[0]->getClasses() as $class) {
+            $className = $class->getName();
+            foreach ($class->getAllMethods() as $method) {
+                $actual[$className . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+            }
+        }
+        foreach ($namespaces[0]->getTraits() as $trait) {
+            $traitName = $trait->getName();
+            foreach ($trait->getAllMethods() as $method) {
+                $actual[$traitName . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+            }
+        }
+        foreach ($namespaces[0]->getInterfaces() as $class) {
+            $className = $class->getName();
+            foreach ($class->getAllMethods() as $method) {
+                $actual[$className . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+            }
+        }
         ksort($expected);
         ksort($actual);
 
