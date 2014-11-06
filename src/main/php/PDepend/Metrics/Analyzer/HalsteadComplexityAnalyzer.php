@@ -77,15 +77,25 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     /**
      * Metrics provided by the analyzer implementation.
      */
-    const M_HALSTEAD_COMPLEXITY = 'hcn';
+    const M_HALSTEAD_LENGTH = 'hlen';
 
-    const M_OPERATORS_COUNT = 'otc';
+    const M_HALSTEAD_VOLUME = 'hvol';
 
-    const M_OPERANDS_COUNT = 'odc';
+    const M_HALSTEAD_BUGS = 'hbug';
 
-    const M_DISTINCT_OPERATORS_COUNT = 'dotc';
+    const M_HALSTEAD_EFFORT = 'heff';
 
-    const M_DISTINCT_OPERANDS_COUNT = 'dodc';
+    const M_HALSTEAD_VOCABULARY = 'hvoc';
+
+    const M_HALSTEAD_DIFFICULTY = 'hdiff';
+
+    const M_OPERATORS_COUNT = 'op';
+
+    const M_OPERANDS_COUNT = 'od';
+
+    const M_UNIQUE_OPERATORS_COUNT = 'uop';
+
+    const M_UNIQUE_OPERANDS_COUNT = 'uod';
 
     private $operatorsDictionary = array();
 
@@ -125,7 +135,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     }
 
     /**
-     * Returns the cyclomatic complexity for the given <b>$node</b> instance.
+     * Returns the Halstead complexity for the given <b>$node</b> instance.
      *
      * @param \PDepend\Source\AST\ASTArtifact $node
      * @return integer
@@ -135,22 +145,6 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         $metrics = $this->getNodeMetrics($node);
         if (isset($metrics[self::M_HALSTEAD_COMPLEXITY])) {
             return $metrics[self::M_HALSTEAD_COMPLEXITY];
-        }
-        return 0;
-    }
-
-    /**
-     * Returns the extended cyclomatic complexity for the given <b>$node</b>
-     * instance.
-     *
-     * @param \PDepend\Source\AST\ASTArtifact $node
-     * @return integer
-     */
-    public function getCcn2(ASTArtifact $node)
-    {
-        $metrics = $this->getNodeMetrics($node);
-        if (isset($metrics[self::M_CYCLOMATIC_COMPLEXITY_2])) {
-            return $metrics[self::M_CYCLOMATIC_COMPLEXITY_2];
         }
         return 0;
     }
@@ -280,11 +274,16 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     public function calculateComplexity(AbstractASTCallable $callable)
     {
         $data = array(
-            self::M_HALSTEAD_COMPLEXITY => 0,
-            self::M_OPERATORS_COUNT => 0,
-            self::M_OPERANDS_COUNT => 0,
-            self::M_DISTINCT_OPERATORS_COUNT => 0,
-            self::M_DISTINCT_OPERANDS_COUNT => 0,
+            self::M_HALSTEAD_LENGTH        => 0,
+            self::M_HALSTEAD_VOLUME        => 0,
+            self::M_HALSTEAD_BUGS          => 0,
+            self::M_HALSTEAD_EFFORT        => 0,
+            self::M_HALSTEAD_VOCABULARY    => 0,
+            self::M_HALSTEAD_DIFFICULTY    => 0,
+            self::M_OPERATORS_COUNT        => 0,
+            self::M_OPERANDS_COUNT         => 0,
+            self::M_UNIQUE_OPERATORS_COUNT => 0,
+            self::M_UNIQUE_OPERANDS_COUNT  => 0,
         );
         $this->operandsDictionary = $this->operatorsDictionary = array();
 
@@ -295,9 +294,29 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
             }
         }
 
-        $data[self::M_HALSTEAD_COMPLEXITY] =
-            ($data[self::M_OPERATORS_COUNT] + $data[self::M_OPERANDS_COUNT]) *
-            log($data[self::M_DISTINCT_OPERATORS_COUNT] + $data[self::M_DISTINCT_OPERANDS_COUNT], 2);
+        // The Halstead length (LTH) is OP+OD
+        $data[self::M_HALSTEAD_LENGTH] =
+            $data[self::M_OPERATORS_COUNT] + $data[self::M_OPERANDS_COUNT];
+
+        // The Halstead Vocabulary (VOC) UOP+UOD
+        $data[self::M_HALSTEAD_VOCABULARY] =
+            $data[self::M_UNIQUE_OPERATORS_COUNT] + $data[self::M_UNIQUE_OPERANDS_COUNT];
+
+        // The Halstead Difficulty (DIF) is (UOP/2) * (OD/UOD)
+        $data[self::M_HALSTEAD_DIFFICULTY] =
+            ($data[self::M_UNIQUE_OPERATORS_COUNT] / 2) * ($data[self::M_OPERANDS_COUNT] / $data[self::M_UNIQUE_OPERANDS_COUNT]);
+
+        // Halstead Volume (VOL) = LTH * log2(VOC)
+        $data[self::M_HALSTEAD_VOLUME] =
+            $data[self::M_HALSTEAD_LENGTH] * log($data[self::M_HALSTEAD_VOCABULARY], 2);
+
+        // Halstead Effort (EFF) = DIF * VOL
+        $data[self::M_HALSTEAD_EFFORT] =
+            $data[self::M_HALSTEAD_DIFFICULTY] * $data[self::M_HALSTEAD_VOLUME];
+
+        // Halstead Bugs (BUG) = VOL/3000 or EFF^(2/3)/3000
+        $data[self::M_HALSTEAD_BUGS] =
+            $data[self::M_HALSTEAD_VOLUME] / 3000;
 
         $this->metrics[$callable->getId()] = $data;
     }
@@ -358,6 +377,15 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
     }
 
+    /**
+     * Visits a switch label.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
     public function visitSwitchStatement($node, $data)
     {
         return $this->visit($node, $this->incrementOperatorCount($data, 'switch'));
@@ -1473,7 +1501,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         ++$data[self::M_OPERATORS_COUNT];
         if (!in_array($operator, $this->operatorsDictionary)) {
             $this->operatorsDictionary[] = $operator;
-            ++$data[self::M_DISTINCT_OPERATORS_COUNT];
+            ++$data[self::M_UNIQUE_OPERATORS_COUNT];
         }
         return $data;
     }
@@ -1483,7 +1511,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         ++$data[self::M_OPERANDS_COUNT];
         if ($forceUnique || !in_array($operand, $this->operandsDictionary)) {
             $this->operandsDictionary[] = $operand;
-            ++$data[self::M_DISTINCT_OPERANDS_COUNT];
+            ++$data[self::M_UNIQUE_OPERANDS_COUNT];
         }
         return $data;
     }
