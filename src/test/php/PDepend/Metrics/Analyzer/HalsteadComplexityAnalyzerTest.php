@@ -101,11 +101,11 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
         $actual   = array();
         $expected = array(
             'operators' => array(
-                'hcn'  => (23 + 16) * log(14 + 3, 2),
+                'hcn'  => (23 + 16) * log(14 + 6, 2),
                 'otc'  => 23,
                 'odc'  => 16,
                 'dotc' => 14,
-                'dodc' => 3,
+                'dodc' => 6,
             ),
             'control_structures1' => array(
                 'hcn'  => (14 + 10) * log(12 + 5, 2),
@@ -113,6 +113,13 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
                 'odc'  => 10,
                 'dotc' => 12,
                 'dodc' => 5,
+            ),
+            'control_structures2' => array(
+                'hcn'  => (11 + 9) * log(11 + 6, 2),
+                'otc'  => 11,
+                'odc'  => 9,
+                'dotc' => 11,
+                'dodc' => 6,
             ),
             'closures' => array(
                 'hcn'  => (8 + 4) * log(4 + 1, 2),
@@ -135,19 +142,12 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
                 'dotc' => 2,
                 'dodc' => 2,
             ),
-            'control_structures2' => array(
-                'hcn'  => (11 + 9) * log(11 + 5, 2),
-                'otc'  => 11,
-                'odc'  => 9,
-                'dotc' => 11,
-                'dodc' => 5,
-            ),
             'others' => array(
-                'hcn'  => (19 + 9) * log(9 + 3, 2),
+                'hcn'  => (19 + 9) * log(9 + 6, 2),
                 'otc'  => 19,
                 'odc'  => 9,
                 'dotc' => 9,
-                'dodc' => 3,
+                'dodc' => 6,
             ),
             'key_words' => array(
                 'hcn'  => (4 + 4) * log(4 + 2, 2),
@@ -157,11 +157,11 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
                 'dodc' => 2,
             ),
             'strings' => array(
-                'hcn'  => (5 + 7) * log(3 + 4, 2),
+                'hcn'  => (5 + 7) * log(3 + 6, 2),
                 'otc'  => 5,
                 'odc'  => 7,
                 'dotc' => 3,
-                'dodc' => 4,
+                'dodc' => 6,
             ),
             'TestInterface::method' => array(),
         );

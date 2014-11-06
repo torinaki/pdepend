@@ -567,7 +567,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitLiteral($node, $data)
     {
-        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
+        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage(), true));
     }
 
     /**
@@ -1478,10 +1478,10 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $data;
     }
 
-    private function incrementOperandCount($data, $operand)
+    private function incrementOperandCount($data, $operand, $forceUnique = false)
     {
         ++$data[self::M_OPERANDS_COUNT];
-        if (!in_array($operand, $this->operandsDictionary)) {
+        if ($forceUnique || !in_array($operand, $this->operandsDictionary)) {
             $this->operandsDictionary[] = $operand;
             ++$data[self::M_DISTINCT_OPERANDS_COUNT];
         }
