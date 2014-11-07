@@ -10,9 +10,10 @@ EOD;
     // array
     array(1, 1, 1);
     $a[1];
-    $a and $a or $a;
+    $a and $a or $a xor $a && $a || $a;
     (object)$a;
     clone $a;
+    $a << $a >> $a;
 }
 
 function control_structures1() {
@@ -38,7 +39,8 @@ function control_structures1() {
     } else {
 
     }
-        
+    $a ? $a : $a;                   // only one operator `?`
+    $a ?: $a;                       // same one operator `?`
 }
 
 function control_structures2()
@@ -50,6 +52,8 @@ function control_structures2()
         break;                      // `;` will be ignored
     } while (true);                 // `;` will be ignored
     for ($i = 1; $i < 1; $i++) {    // all `;` will be ignored
+    }
+    foreach ($a as $a => $a) {
     }
     declare(ticks=42) {}            // directives will be ignored
     goto a;                         // operator "goto" and operand "a", `;` will be ignored
@@ -74,6 +78,7 @@ function others() {
     require_once "";
     isset($a);
     list($a) = $a;
+    func($a);
 };
 
 function key_words ()
@@ -93,6 +98,7 @@ function strings() {
 
 class TestClass extends stdClass
 {
+    const TEST_CONST = 'value';
     protected $property = 'value';
 
     function method()
@@ -101,13 +107,15 @@ class TestClass extends stdClass
         Foo::class;
         new Foo();
         $foo->{$foo}();
+        $foo->foo;
         Foo::$${$foo}();
         Foo::$foo();
         Foo::$$foo();
         Foo::$$$foo();
         parent::method();   // `parent` operator
-        self::method();     // `self` operator
+        self::TEST_CONST;   // `self` operator
         static::method();   // `static` operator
+        $foo instanceof Foo;
     }
 }
 

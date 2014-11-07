@@ -102,11 +102,27 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     private $operandsDictionary = array();
 
     /**
-     * The project Halstead Complexity Number.
+     * The project Halstead metrics.
+     * Vocabulary and Difficulty is not calculated for project.
      *
-     * @var integer
+     * @var array
      */
-    private $hcn = 0;
+    private $projectMetrics = array(
+        self::M_HALSTEAD_LENGTH => 0,
+        self::M_HALSTEAD_VOLUME => 0,
+        self::M_HALSTEAD_BUGS   => 0,
+        self::M_HALSTEAD_EFFORT => 0,
+    );
+
+    /**
+     * @var array
+     */
+    private $classMetrics = array(
+        self::M_HALSTEAD_LENGTH => 0,
+        self::M_HALSTEAD_VOLUME => 0,
+        self::M_HALSTEAD_BUGS   => 0,
+        self::M_HALSTEAD_EFFORT => 0,
+    );
 
     /**
      * Processes all {@link \PDepend\Source\AST\ASTNamespace} code nodes.
@@ -134,20 +150,20 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         }
     }
 
-    /**
-     * Returns the Halstead complexity for the given <b>$node</b> instance.
-     *
-     * @param \PDepend\Source\AST\ASTArtifact $node
-     * @return integer
-     */
-    public function getHcn(ASTArtifact $node)
-    {
-        $metrics = $this->getNodeMetrics($node);
-        if (isset($metrics[self::M_HALSTEAD_COMPLEXITY])) {
-            return $metrics[self::M_HALSTEAD_COMPLEXITY];
-        }
-        return 0;
-    }
+//    /**
+//     * Returns the Halstead complexity for the given <b>$node</b> instance.
+//     *
+//     * @param \PDepend\Source\AST\ASTArtifact $node
+//     * @return integer
+//     */
+//    public function getHcn(ASTArtifact $node)
+//    {
+//        $metrics = $this->getNodeMetrics($node);
+//        if (isset($metrics[self::M_HALSTEAD_COMPLEXITY])) {
+//            return $metrics[self::M_HALSTEAD_COMPLEXITY];
+//        }
+//        return 0;
+//    }
 
     /**
      * This method will return an <b>array</b> with all generated metric values
@@ -172,9 +188,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function getProjectMetrics()
     {
-        return array(
-            self::M_HALSTEAD_COMPLEXITY  =>  $this->hcn,
-        );
+        return $this->projectMetrics;
     }
 
     /**
@@ -218,8 +232,10 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
 
         $class->getCompilationUnit()->accept($this);
 
+        $this->metrics[$class->getId()] = $this->classMetrics;
         foreach ($class->getMethods() as $method) {
             $method->accept($this);
+            $this->recalculateOverallMetrics($this->metrics[$class->getId()], $method->getId());
         }
 
         $this->fireEndClass($class);
@@ -238,8 +254,10 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
 
         $trait->getCompilationUnit()->accept($this);
 
+        $this->metrics[$trait->getId()] = $this->classMetrics;
         foreach ($trait->getMethods() as $method) {
             $method->accept($this);
+            $this->recalculateOverallMetrics($this->metrics[$trait->getId()], $method->getId());
         }
 
         $this->fireEndTrait($trait);
@@ -332,7 +350,19 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     private function updateProjectMetrics($nodeId)
     {
-        //$this->hcn  += $this->metrics[$nodeId][self::M_HALSTEAD_COMPLEXITY];
+        $this->recalculateOverallMetrics($this->projectMetrics, $nodeId);
+    }
+
+    /**
+     * @param array $metrics
+     * @param string $nodeId
+     */
+    private function recalculateOverallMetrics(&$metrics, $nodeId)
+    {
+        $metrics[self::M_HALSTEAD_LENGTH] += $this->metrics[$nodeId][self::M_HALSTEAD_LENGTH];
+        $metrics[self::M_HALSTEAD_VOLUME] += $this->metrics[$nodeId][self::M_HALSTEAD_VOLUME];
+        $metrics[self::M_HALSTEAD_BUGS] = $metrics[self::M_HALSTEAD_VOLUME] / 3000;
+        $metrics[self::M_HALSTEAD_EFFORT] += $this->metrics[$nodeId][self::M_HALSTEAD_EFFORT];
     }
 
     /**
@@ -1496,8 +1526,17 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $this->visit($node, $this->incrementOperatorCount($data, 'unset'));
     }
 
+    /**
+     * @param array  $data
+     * @param string $operator
+     *
+     * @return array
+     */
     private function incrementOperatorCount($data, $operator)
     {
+        if (!$operator) {
+            throw new \InvalidArgumentException('Operator string can\'t be empty');
+        }
         ++$data[self::M_OPERATORS_COUNT];
         if (!in_array($operator, $this->operatorsDictionary)) {
             $this->operatorsDictionary[] = $operator;
@@ -1506,6 +1545,13 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
         return $data;
     }
 
+    /**
+     * @param array  $data
+     * @param string $operand
+     * @param bool   $forceUnique count provided operator as unique anyway
+     *
+     * @return array
+     */
     private function incrementOperandCount($data, $operand, $forceUnique = false)
     {
         ++$data[self::M_OPERANDS_COUNT];

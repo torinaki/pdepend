@@ -80,10 +80,10 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
      *
      * @return void
      */
-    public function testGetHCNReturnsZeroForUnknownNode()
+    public function testGetNodeMetricsReturnsEmptyForUnknownNode()
     {
         $analyzer = $this->_createAnalyzer();
-        $this->assertEquals(0, $analyzer->getHcn($this->getMock('\\PDepend\\Source\\AST\\ASTArtifact')));
+        $this->assertEquals(array(), $analyzer->getNodeMetrics($this->getMock('\\PDepend\\Source\\AST\\ASTArtifact')));
     }
 
     /**
@@ -101,22 +101,22 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
         $actual   = array();
         $expected = array(
             'operators' => array(
-                'op'  => 23,
-                'od'  => 16,
-                'uop' => 14,
+                'op'  => 29,
+                'od'  => 22,
+                'uop' => 19,
                 'uod' => 6,
             ),
             'control_structures1' => array(
-                'op'  => 14,
-                'od'  => 10,
-                'uop' => 12,
+                'op'  => 18,
+                'od'  => 15,
+                'uop' => 14,
                 'uod' => 5,
             ),
             'control_structures2' => array(
-                'op'  => 11,
-                'od'  => 9,
-                'uop' => 11,
-                'uod' => 6,
+                'op'  => 12,
+                'od'  => 12,
+                'uop' => 12,
+                'uod' => 7,
             ),
             'closures' => array(
                 'op'  => 8,
@@ -125,10 +125,10 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
                 'uod' => 1,
             ),
             'TestClass::method' => array(
-                'op'  => 31,
-                'od'  => 18,
-                'uop' => 10,
-                'uod' => 4,
+                'op'  => 35,
+                'od'  => 22,
+                'uop' => 11,
+                'uod' => 6,
             ),
             'TestTrait::method' => array(
                 'op'  => 2,
@@ -137,10 +137,10 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
                 'uod' => 2,
             ),
             'others' => array(
-                'op'  => 19,
-                'od'  => 9,
+                'op'  => 20,
+                'od'  => 11,
                 'uop' => 9,
-                'uod' => 6,
+                'uod' => 7,
             ),
             'key_words' => array(
                 'op'  => 4,
@@ -223,22 +223,27 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
 
         $this->assertEquals($expected, $actual);
     }
-//
-//    /**
-//     * testCalculateFunctionCCNAndCNN2ProjectMetrics
-//     *
-//     * @return void
-//     */
-//    public function testCalculateFunctionCCNAndCNN2ProjectMetrics()
-//    {
-//        $analyzer = $this->_createAnalyzer();
-//        $analyzer->analyze(self::parseTestCaseSource(__METHOD__));
-//
-//        $expected = array('ccn' => 12, 'ccn2' => 16);
-//        $actual   = $analyzer->getProjectMetrics();
-//
-//        $this->assertEquals($expected, $actual);
-//    }
+
+    /**
+     * testCalculateProjectMetrics
+     *
+     * @return void
+     */
+    public function testCalculateProjectMetrics()
+    {
+        $analyzer = $this->_createAnalyzer();
+        $analyzer->analyze(self::parseTestCaseSource(__METHOD__));
+
+        $expected = array(
+            'hlen' => (23 + 16) * 2,
+            'hvol' => ((23 + 16) * log(14 + 6, 2)) * 2,
+            'hbug' => (((23 + 16) * log(14 + 6, 2)) * 2)/3000,
+            'heff' => (((14 / 2) * (16 / 6)) * ((23 + 16) * log(14 + 6, 2))) * 2,
+        );
+        $actual   = $analyzer->getProjectMetrics();
+
+        $this->assertEquals($expected, $actual);
+    }
 //
 //    /**
 //     * Tests that the analyzer calculates the correct method cc numbers.
