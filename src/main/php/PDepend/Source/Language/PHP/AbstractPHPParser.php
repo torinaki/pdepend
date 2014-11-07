@@ -123,6 +123,8 @@ abstract class AbstractPHPParser
                       \)
                       |
                       ([a-zA-Z_\x7f-\xff\\\\][a-zA-Z0-9_\x7f-\xff\|\\\\]*))\s+
+                      |
+                       ([a-zA-Z_\x7f-\xff\\\\][a-zA-Z0-9_\x7f-\xff\|\\\\]*)\[\]
                     )ix';
 
     /**
@@ -137,6 +139,8 @@ abstract class AbstractPHPParser
                        \)
                        |
                        ([a-zA-Z_\x7f-\xff\\\\][a-zA-Z0-9_\x7f-\xff\|\\\\]*))\s+
+                       |
+                       ([a-zA-Z_\x7f-\xff\\\\][a-zA-Z0-9_\x7f-\xff\|\\\\]*)\[\]\s+
                        |
                        (array)\(\s*\)\s+
                      )ix';
@@ -2761,6 +2765,10 @@ abstract class AbstractPHPParser
                     $expressions[] = $expr;
                     break;
 
+                case Tokens::T_YIELD:
+                    $expressions[] = $this->parseYield();
+                    break;
+
                 default:
                     throw new UnexpectedTokenException(
                         $this->consumeToken($tokenType),
@@ -3033,10 +3041,24 @@ abstract class AbstractPHPParser
         $stmt = $this->builder->buildAstTryStatement($token->image);
         $stmt->addChild($this->parseRegularScope());
 
-        do {
+        $this->consumeComments();
+
+        if (false === in_array($this->tokenizer->peek(), array(Tokens::T_CATCH, Tokens::T_FINALLY))) {
+            throw new UnexpectedTokenException(
+                $this->tokenizer->next(),
+                $this->tokenizer->getSourceFile()
+            );
+        }
+
+        while ($this->tokenizer->peek() === Tokens::T_CATCH) {
             $stmt->addChild($this->parseCatchStatement());
             $this->consumeComments();
-        } while ($this->tokenizer->peek() === Tokens::T_CATCH);
+        }
+
+        while ($this->tokenizer->peek() === Tokens::T_FINALLY) {
+            $stmt->addChild($this->parseFinallyStatement());
+            $this->consumeComments();
+        }
 
         return $this->setNodePositionsAndReturn($stmt);
     }
@@ -3176,6 +3198,25 @@ abstract class AbstractPHPParser
         $catch->addChild($this->parseRegularScope());
 
         return $this->setNodePositionsAndReturn($catch);
+    }
+
+    /**
+     * This method parses a finally-statement.
+     *
+     * @return \PDepend\Source\AST\ASTFinallyStatement
+     * @since 2.0.0
+     */
+    private function parseFinallyStatement()
+    {
+        $this->tokenStack->push();
+        $this->consumeComments();
+
+        $token = $this->consumeToken(Tokens::T_FINALLY);
+
+        $finally = $this->builder->buildAstFinallyStatement($token->image);
+        $finally->addChild($this->parseRegularScope());
+
+        return $this->setNodePositionsAndReturn($finally);
     }
 
     /**
@@ -3372,13 +3413,22 @@ abstract class AbstractPHPParser
         if ($this->tokenizer->peek() === Tokens::T_BITWISE_AND) {
             $foreach->addChild($this->parseVariableOrMemberByReference());
         } else {
-            $foreach->addChild($this->parseVariableOrConstantOrPrimaryPrefix());
+            if ($this->tokenizer->peek() == Tokens::T_LIST) {
+                $foreach->addChild($this->parseListExpression());
+            } else {
+                $foreach->addChild($this->parseVariableOrConstantOrPrimaryPrefix());
 
-            if ($this->tokenizer->peek() === Tokens::T_DOUBLE_ARROW) {
-                $this->consumeToken(Tokens::T_DOUBLE_ARROW);
-                $foreach->addChild(
-                    $this->parseVariableOrMemberOptionalByReference()
-                );
+                if ($this->tokenizer->peek() === Tokens::T_DOUBLE_ARROW) {
+                    $this->consumeToken(Tokens::T_DOUBLE_ARROW);
+
+                    if ($this->tokenizer->peek() == Tokens::T_LIST) {
+                        $foreach->addChild($this->parseListExpression());
+                    } else {
+                        $foreach->addChild(
+                            $this->parseVariableOrMemberOptionalByReference()
+                        );
+                    }
+                }
             }
         }
 
@@ -5568,6 +5618,9 @@ abstract class AbstractPHPParser
                 $this->builder->restoreClass($class);
                 $this->compilationUnit->addChild($class);
                 return $class;
+
+            case Tokens::T_YIELD:
+                return $this->parseYield();
         }
 
         $this->tokenStack->push();
@@ -6465,7 +6518,6 @@ abstract class AbstractPHPParser
      * it returns the found property types.
      *
      * @param string $comment A doc comment text.
-     *
      * @return array(string)
      */
     private function parseVarAnnotation($comment)
@@ -6530,6 +6582,37 @@ abstract class AbstractPHPParser
     }
 
     /**
+     * This method parses a yield-statement node.
+     *
+     * @return \PDepend\Source\AST\ASTYieldStatmenet
+     */
+    private function parseYield()
+    {
+        $this->tokenStack->push();
+
+        $token = $this->consumeToken(Tokens::T_YIELD);
+        $this->consumeComments();
+
+        $yield = $this->builder->buildAstYieldStatement($token->image);
+
+        $yield->addChild($this->parseOptionalExpression());
+
+        if ($this->tokenizer->peek() === Tokens::T_DOUBLE_ARROW) {
+            $this->consumeToken(Tokens::T_DOUBLE_ARROW);
+
+            $yield->addChild($this->parseOptionalExpression());
+        }
+
+        $this->consumeComments();
+        if (Tokens::T_PARENTHESIS_CLOSE === $this->tokenizer->peek()) {
+            return $this->setNodePositionsAndReturn($yield);
+        }
+
+        $this->parseStatementTermination();
+        return $this->setNodePositionsAndReturn($yield);
+    }
+
+    /**
      * Extracts documented <b>throws</b> and <b>return</b> types and sets them
      * to the given <b>$callable</b> instance.
      *
@@ -6578,6 +6661,7 @@ abstract class AbstractPHPParser
         } elseif ($token->type == $tokenType) {
             return $this->tokenStack->add($token);
         }
+
         throw new UnexpectedTokenException(
             $token,
             $this->tokenizer->getSourceFile()

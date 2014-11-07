@@ -631,6 +631,14 @@ interface Builder extends \IteratorAggregate
     public function buildAstCatchStatement($image);
 
     /**
+     * Builds a new finally-statement node.
+     *
+     * @return \PDepend\Source\AST\ASTFinallyStatement
+     * @since 2.0.0
+     */
+    public function buildAstFinallyStatement();
+
+    /**
      * Builds a new if statement node.
      *
      * @param string $image The source image of this statement.
@@ -1206,4 +1214,14 @@ interface Builder extends \IteratorAggregate
      * @since 0.9.12
      */
     public function buildAstEchoStatement($image);
+
+    /**
+     * Builds a new yield-statement instance.
+     *
+     * @param string $image The source code image for this node.
+     *
+     * @return \PDepend\Source\AST\ASTYieldStatement
+     * @since $version$
+     */
+    public function buildAstYieldStatement($image);
 }

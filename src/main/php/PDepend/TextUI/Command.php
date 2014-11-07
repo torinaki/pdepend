@@ -130,6 +130,13 @@ class Command
         if (isset($this->options['--configuration'])) {
             $configurationFile = $this->options['--configuration'];
 
+            if (false === file_exists($configurationFile)) {
+                $configurationFile = getcwd() . '/' . $configurationFile;
+            }
+            if (false === file_exists($configurationFile)) {
+                $configurationFile = $this->options['--configuration'];
+            }
+
             unset($this->options['--configuration']);
         } elseif (file_exists(getcwd() . '/pdepend.xml')) {
             $configurationFile = getcwd() . '/pdepend.xml';
@@ -385,7 +392,16 @@ class Command
      */
     protected function printVersion()
     {
-        echo 'PDepend @package_version@', PHP_EOL, PHP_EOL;
+        $build = __DIR__ . '/../../../../../build.properties';
+
+        if (file_exists($build)) {
+            $data = @parse_ini_file($build);
+            $version = $data['project.version'];
+        } else {
+            $version = '@package_version@';
+        }
+
+        echo 'PDepend ', $version, PHP_EOL, PHP_EOL;
     }
 
     /**

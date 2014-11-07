@@ -53,11 +53,6 @@ use PDepend\Source\AST\AbstractASTArtifact;
 class CloverReport implements Report
 {
     /**
-     * The type of this class.
-     */
-    const CLAZZ = __CLASS__;
-
-    /**
      * Holds the line coverage for all files found in the coverage report.
      *
      * @var array(string=>array)
@@ -114,7 +109,7 @@ class CloverReport implements Report
      */
     public function getCoverage(AbstractASTArtifact $artifact)
     {
-        $lines = $this->getLines((string) $artifact->getCompilationUnit());
+        $lines = $this->getLines($artifact->getCompilationUnit()->getFileName());
 
         $startLine = $artifact->getStartLine();
         $endLine   = $artifact->getEndLine();
@@ -129,6 +124,10 @@ class CloverReport implements Report
             if ($lines[$i]) {
                 ++$executed;
             }
+        }
+
+        if (0 === $executed && 1 === $executable && 0 < ($endLine - $startLine)) {
+            return 100;
         }
         if ($executed === 0) {
             return 0;

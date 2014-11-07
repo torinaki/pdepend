@@ -58,7 +58,6 @@ use PDepend\Source\Language\PHP\PHPBuilder;
 use PDepend\Source\Language\PHP\PHPParserGeneric;
 use PDepend\Source\Language\PHP\PHPTokenizerInternal;
 use PDepend\Util\Cache\Driver\MemoryCacheDriver;
-use PDepend\Util\Configuration\ConfigurationFactory;
 
 /**
  * Abstract test case implementation for the PDepend namespace.
@@ -85,7 +84,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
     {
         parent::setUp();
 
-        $run = dirname(__FILE__) . '/_run';
+        $run = __DIR__ . '/_run';
         if (file_exists($run) === false) {
             mkdir($run, 0755);
         }
@@ -448,7 +447,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
     private function clearRunResources($dir = null)
     {
         if ($dir === null) {
-            $dir = dirname(__FILE__) . '/_run';
+            $dir = __DIR__ . '/_run';
         }
 
         foreach (new \DirectoryIterator($dir) as $file) {
@@ -532,7 +531,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         $class = new ASTClass($name);
         $class->setCompilationUnit(new ASTCompilationUnit($GLOBALS['argv'][0]));
         $class->setCache(new MemoryCacheDriver());
-        $class->setContext($this->getMock(BuilderContext::CLAZZ));
+        $class->setContext($this->getMock('PDepend\\Source\\Builder\\BuilderContext'));
 
         return $class;
     }
@@ -619,7 +618,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
      */
     protected static function createRunResourceURI($fileName = null)
     {
-        $uri = dirname(__FILE__) . '/_run/' . ($fileName ? $fileName : uniqid());
+        $uri = __DIR__ . '/_run/' . ($fileName ? $fileName : uniqid());
         if (file_exists($uri) === true) {
             throw new \ErrorException("File '{$fileName}' already exists.");
         }

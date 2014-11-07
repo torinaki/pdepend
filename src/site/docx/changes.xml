@@ -9,9 +9,51 @@
     </properties>
 
 	<body>
-        <release version="2.0.0"
-                 date=""
+        <release version="2.0.3"
+                 date="2014/10/08"
+                 description="This is a bugfix release which closes some minor issues.">
+            <action date="64f95c1" dev="manuelpichler" type="fix" issue="129" system="github">
+                Windows+Composer install fails due to "path too long"
+            </action>
+            <action dev="manuelpichler" type="fix" issue="172" system="github">
+                Outdated news on the website
+            </action>
+            <action date="a744af1" dev="digilist" type="fix" issue="166" system="github">
+                Added support for foreach with list statement (PHP 5.5)
+            </action>
+            <action date="a744af1" dev="digilist" type="fix" issue="171" system="github">
+                The list usage in foreach loops reports an invalid token
+            </action>
+        </release>
+        <release version="2.0.2"
+                 date="2014/09/16"
                  description="">
+            <action date="4dca605" dev="manuelpichler" due-to="MalteGerth" type="fix" issue="160" system="github">
+                include_once PDepend/Util/Coverage/CloverReport.php: failed to open stream
+            </action>
+            <action date="2ec5166" dev="manuelpichler" type="add" issue="105" system="github">
+                Support Java style array notations in doc comments
+            </action>
+        </release>
+        <release version="2.0.1"
+                 date="2014/09/09"
+                 description="Bug fix release which closes a issue within PDepend's C.R.A.P. index calculation.">
+            <action date="3e67aa2" dev="manuelpichler" type="fix">
+                Handle code surrounded by @codeCoverageIgnore annotations correct.
+            </action>
+        </release>
+        <release version="2.0.0"
+                 date="2014/05/21"
+                 description="New mayor release of PDepend.">
+            <action date="b9775ac" dev="manuelpichler" due-to="claar" type="fix" issue="126" system="github">
+                Allow closure as array element
+            </action>
+            <action date="e536e7a" dev="manuelpichler" due-to="hgraca" type="fix" issue="153" system="github">
+                Support for new finally keyword implemented.
+            </action>
+            <action date="f6acea9" dev="manuelpichler" type="fix" issue="144" system="github">
+                pdepend --version gives me a wrong message..
+            </action>
             <action date="3ba9c9e" dev="robocoder" type="add" issue="113" system="github">
                 Specify license, BSD license was missing in composer.json file.
             </action>

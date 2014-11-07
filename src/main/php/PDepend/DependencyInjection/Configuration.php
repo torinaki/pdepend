@@ -59,7 +59,7 @@ class Configuration implements ConfigurationInterface
     /**
      * @var array(Extension)
      */
-    private $extension = array();
+    private $extensions = array();
 
     public function __construct(array $extensions)
     {
@@ -98,7 +98,7 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('parser')
                     ->addDefaultsIfNotSet()
                     ->children()
-                        ->integerNode('nesting')->defaultValue(8192)->end()
+                        ->integerNode('nesting')->defaultValue(65536)->end()
                     ->end()
                 ->end()
             ->end()
