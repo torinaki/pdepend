@@ -97,8 +97,19 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
 
     const M_UNIQUE_OPERANDS_COUNT = 'uod';
 
+    /**
+     * Contains unique operators in scope of function/method
+     *
+     * @var array
+     */
     private $operatorsDictionary = array();
 
+    /**
+     * Contains unique operands in scope of function/method.
+     * Literals always treated as unique.
+     *
+     * @var array
+     */
     private $operandsDictionary = array();
 
     /**
@@ -115,6 +126,8 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     );
 
     /**
+     * Class/trait metrics template
+     *
      * @var array
      */
     private $classMetrics = array(
@@ -149,21 +162,6 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
             $this->unloadCache();
         }
     }
-
-//    /**
-//     * Returns the Halstead complexity for the given <b>$node</b> instance.
-//     *
-//     * @param \PDepend\Source\AST\ASTArtifact $node
-//     * @return integer
-//     */
-//    public function getHcn(ASTArtifact $node)
-//    {
-//        $metrics = $this->getNodeMetrics($node);
-//        if (isset($metrics[self::M_HALSTEAD_COMPLEXITY])) {
-//            return $metrics[self::M_HALSTEAD_COMPLEXITY];
-//        }
-//        return 0;
-//    }
 
     /**
      * This method will return an <b>array</b> with all generated metric values
