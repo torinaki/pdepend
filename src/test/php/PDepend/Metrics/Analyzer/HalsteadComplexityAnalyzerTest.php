@@ -87,11 +87,11 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
     }
 
     /**
-     * Tests that the analyzer calculates the correct function cc numbers.
+     * Tests that the analyzer calculates the correct operators and operands counts.
      *
      * @return void
      */
-    public function testCalculateFunctionHCN()
+    public function testCalculateOperatorsOperandsCounts()
     {
         $namespaces = $this->parseCodeResourceForTest();
 
@@ -185,6 +185,41 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
         };
         array_walk($expected, $filterKeys);
         array_walk($actual, $filterKeys);
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    /**
+     * Tests all base Halstead metrics calculations
+     *
+     * @return void
+     */
+    public function testHalsteadMetricsCalculation()
+    {
+        $namespaces = $this->parseCodeResourceForTest();
+
+        $analyzer = $this->_createAnalyzer();
+        $analyzer->analyze($namespaces);
+
+        $actual   = array();
+        $expected = array(
+            'operators' => array(
+                'hlen' => 23 + 16,
+                'hvol' => (23 + 16) * log(14 + 6, 2),
+                'hbug' => ((23 + 16) * log(14 + 6, 2)) / 3000,
+                'heff' => ((14 / 2) * (16 / 6)) * ((23 + 16) * log(14 + 6, 2)),
+                'hvoc' => 14 + 6,
+                'hdiff' => (14 / 2) * (16 / 6),
+                'op'  => 23,
+                'od'  => 16,
+                'uop' => 14,
+                'uod' => 6,
+            ),
+        );
+
+        foreach ($namespaces[0]->getFunctions() as $function) {
+            $actual[$function->getName()] = $analyzer->getNodeMetrics($function);
+        }
 
         $this->assertEquals($expected, $actual);
     }
