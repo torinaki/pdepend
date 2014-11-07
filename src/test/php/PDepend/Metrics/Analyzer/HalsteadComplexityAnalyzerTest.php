@@ -101,10 +101,10 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
         $actual   = array();
         $expected = array(
             'operators' => array(
-                'op'  => 29,
-                'od'  => 22,
-                'uop' => 19,
-                'uod' => 6,
+                'op'  => 30,
+                'od'  => 23,
+                'uop' => 20,
+                'uod' => 7,
             ),
             'control_structures1' => array(
                 'op'  => 18,

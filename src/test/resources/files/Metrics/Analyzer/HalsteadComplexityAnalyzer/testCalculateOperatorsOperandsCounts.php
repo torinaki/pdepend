@@ -9,7 +9,7 @@ abcd12345
 EOD;
     // array
     array(1, 1, 1);
-    $a[1];
+    $a[1]{1};
     $a and $a or $a xor $a && $a || $a;
     (object)$a;
     clone $a;

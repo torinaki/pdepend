@@ -1034,7 +1034,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitConstant($node, $data)
     {
-        return $this->visit($node, $data);
+        // ignore class declaration
     }
 
     /**
@@ -1048,7 +1048,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitConstantDeclarator($node, $data)
     {
-        return $this->visit($node, $data);
+        // ignore class declaration
     }
 
     /**
@@ -1062,7 +1062,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitConstantDefinition($node, $data)
     {
-        return $this->visit($node, $data);
+        // ignore class declaration
     }
 
     /**
@@ -1143,7 +1143,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitFieldDeclaration($node, $data)
     {
-        return $this->visit($node, $data);
+        // ignore class declaration
     }
 
     /**
@@ -1171,7 +1171,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitFormalParameter($node, $data)
     {
-        return $this->visit($node, $data);
+        // ignore function/method declaration
     }
 
     /**
@@ -1185,7 +1185,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitFormalParameters($node, $data)
     {
-        return $this->visit($node, $data);
+        // ignore function/method declaration
     }
 
     /**
@@ -1355,7 +1355,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitPrimitiveType($node, $data)
     {
-        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+        // ignore function/method declaration
     }
 
     /**
