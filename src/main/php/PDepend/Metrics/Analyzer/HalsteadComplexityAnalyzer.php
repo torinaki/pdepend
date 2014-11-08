@@ -1170,6 +1170,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     public function visitFormalParameter($node, $data)
     {
         // ignore function/method declaration
+        return $data;
     }
 
     /**
@@ -1184,6 +1185,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     public function visitFormalParameters($node, $data)
     {
         // ignore function/method declaration
+        return $data;
     }
 
     /**
@@ -1354,6 +1356,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     public function visitPrimitiveType($node, $data)
     {
         // ignore function/method declaration
+        return $data;
     }
 
     /**
