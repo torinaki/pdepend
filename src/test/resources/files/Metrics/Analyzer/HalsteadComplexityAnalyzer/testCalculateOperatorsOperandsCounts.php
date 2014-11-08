@@ -21,6 +21,8 @@ function control_structures1() {
 
     } catch (\Exception $a) {
 
+    } finally {
+
     }
 
     switch ($a) {
@@ -63,6 +65,7 @@ function control_structures2()
 function closures() {
     $a = function () {
         $a;
+        yield $a;
         return $a;
     };
     return $a;

@@ -107,9 +107,9 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
                 'uod' => 7,
             ),
             'control_structures1' => array(
-                'op'  => 18,
+                'op'  => 19,
                 'od'  => 15,
-                'uop' => 14,
+                'uop' => 15,
                 'uod' => 5,
             ),
             'control_structures2' => array(
@@ -119,9 +119,9 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
                 'uod' => 7,
             ),
             'closures' => array(
-                'op'  => 8,
-                'od'  => 4,
-                'uop' => 4,
+                'op'  => 9,
+                'od'  => 5,
+                'uop' => 5,
                 'uod' => 1,
             ),
             'TestClass::method' => array(

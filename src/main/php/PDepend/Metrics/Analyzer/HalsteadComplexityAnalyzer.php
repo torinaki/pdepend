@@ -1528,6 +1528,34 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     }
 
     /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
+    public function visitFinallyStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    /**
+     * Visits a catch statement.
+     *
+     * @param \PDepend\Source\AST\ASTNode $node The currently visited node.
+     * @param array(string=>integer)   $data The previously calculated ccn values.
+     *
+     * @return array(string=>integer)
+     * @since 0.9.8
+     */
+    public function visitYieldStatement($node, $data)
+    {
+        return $this->visit($node, $this->incrementOperatorCount($data, $node->getImage()));
+    }
+
+    /**
      * @param array  $data
      * @param string $operator
      *
