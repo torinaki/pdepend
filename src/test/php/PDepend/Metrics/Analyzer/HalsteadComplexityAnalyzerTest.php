@@ -70,7 +70,6 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
      */
     protected function setUp()
     {
-        error_reporting( E_ALL | E_STRICT );
         parent::setUp();
 
         $this->cache = new MemoryCacheDriver();
@@ -260,6 +259,40 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
     }
 
     /**
+     * testCalculateMetricsForEmptyFunction
+     *
+     * @return void
+     */
+    public function testShouldCalculateConstantsAndNotReturnNotice()
+    {
+        $namespaces = $this->parseCodeResourceForTest();
+
+        $analyzer = $this->_createAnalyzer();
+        $analyzer->analyze($namespaces);
+
+        $actual   = array();
+        $expected = array(
+            'testAttachFileInvalidElement' => array(
+                'hlen' => 2,
+                'hvol' => 2,
+                'hbug' => 0.00066666666666667,
+                'heff' => 1,
+                'hvoc' => 2,
+                'hdiff' => 0.5,
+                'op'  => 1,
+                'od'  => 1,
+                'uop' => 1,
+                'uod' => 1,
+            ),
+        );
+        foreach ($namespaces[0]->getFunctions() as $function) {
+            $actual[$function->getName()] = $analyzer->getNodeMetrics($function);
+        }
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    /**
      * testCalculateProjectMetrics
      *
      * @return void
@@ -270,21 +303,12 @@ class HalsteadComplexityAnalyzerTest extends AbstractMetricsTest
         $analyzer->analyze(self::parseTestCaseSource(__METHOD__));
 
         $expected = array(
-            'hlen' => 0,
-            'hvol' => 0,
-            'hbug' => 0,
-            'heff' => 0,
-            'hvoc' => 0,
-            'hdiff' => 0,
-            'op' => 0,
-            'od' => 0,
-            'uop' => 0,
-            'uod' => 0,
+            'hlen' => (23 + 16) * 2,
+            'hvol' => ((23 + 16) * log(14 + 6, 2)) * 2,
+            'hbug' => (((23 + 16) * log(14 + 6, 2)) * 2)/3000,
+            'heff' => (((14 / 2) * (16 / 6)) * ((23 + 16) * log(14 + 6, 2))) * 2,
         );
         $actual   = $analyzer->getProjectMetrics();
-
-        var_export($actual);
-
         $this->assertEquals($expected, $actual);
     }
 //

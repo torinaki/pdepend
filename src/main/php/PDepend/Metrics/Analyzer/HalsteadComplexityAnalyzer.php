@@ -1038,7 +1038,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
      */
     public function visitConstant($node, $data)
     {
-        // ignore class declaration
+        return $this->visit($node, $this->incrementOperandCount($data, $node->getImage()));
     }
 
     /**
