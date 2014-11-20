@@ -320,11 +320,17 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
 
         // The Halstead Difficulty (DIF) is (UOP/2) * (OD/UOD)
         $data[self::M_HALSTEAD_DIFFICULTY] =
-            ($data[self::M_UNIQUE_OPERATORS_COUNT] / 2) * ($data[self::M_OPERANDS_COUNT] / $data[self::M_UNIQUE_OPERANDS_COUNT]);
+            $data[self::M_UNIQUE_OPERANDS_COUNT] && $data[self::M_OPERANDS_COUNT]
+                ? ($data[self::M_UNIQUE_OPERATORS_COUNT] / 2) * ($data[self::M_OPERANDS_COUNT] / $data[self::M_UNIQUE_OPERANDS_COUNT])
+                : 0
+        ;
 
         // Halstead Volume (VOL) = LTH * log2(VOC)
         $data[self::M_HALSTEAD_VOLUME] =
-            $data[self::M_HALSTEAD_LENGTH] * log($data[self::M_HALSTEAD_VOCABULARY], 2);
+            $data[self::M_HALSTEAD_VOCABULARY]
+                ? $data[self::M_HALSTEAD_LENGTH] * log($data[self::M_HALSTEAD_VOCABULARY], 2)
+                : 0
+        ;
 
         // Halstead Effort (EFF) = DIF * VOL
         $data[self::M_HALSTEAD_EFFORT] =

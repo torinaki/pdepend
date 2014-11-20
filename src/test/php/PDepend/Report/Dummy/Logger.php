@@ -110,6 +110,7 @@ class Logger implements CodeAwareGenerator, FileAwareGenerator
             'pdepend.analyzer.coupling',
             'pdepend.analyzer.class_level',
             'pdepend.analyzer.cohesion',
+            'pdepend.analyzer.halstead_complexity',
         );
     }
 

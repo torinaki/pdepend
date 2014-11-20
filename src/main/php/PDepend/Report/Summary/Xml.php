@@ -143,6 +143,7 @@ class Xml extends AbstractASTVisitor implements CodeAwareGenerator, FileAwareGen
             'pdepend.analyzer.coupling',
             'pdepend.analyzer.class_level',
             'pdepend.analyzer.cohesion',
+            'pdepend.analyzer.halstead_complexity',
         );
     }
 
