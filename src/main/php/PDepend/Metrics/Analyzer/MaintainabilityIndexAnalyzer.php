@@ -76,11 +76,15 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     /**
      * Metrics provided by the analyzer implementation.
      */
-    const M_MAINTAINABILITY_INDEX = 'mi';
+    const M_MAINTAINABILITY_INDEX_1 = 'mi';
 
-    const M_MAINTAINABILITY_INDEX2 = 'mi2';
+    const M_MAINTAINABILITY_INDEX_2 = 'mi2';
 
-    const M_MAINTAINABILITY_INDEX_NO_COMMENTS = 'minc';
+    const M_MAINTAINABILITY_INDEX_2_1 = 'mi21';
+
+    const M_MAINTAINABILITY_INDEX_NO_COMMENTS_1 = 'minc';
+
+    const M_MAINTAINABILITY_INDEX_NO_COMMENTS_2 = 'minc2';
 
     /**
      * The project Maintainability Index metrics.
@@ -88,8 +92,11 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
      * @var array
      */
     private $projectMetrics = array(
-        self::M_MAINTAINABILITY_INDEX               => 0,
-        self::M_MAINTAINABILITY_INDEX_NO_COMMENTS   => 0,
+        self::M_MAINTAINABILITY_INDEX_1               => 0,
+        self::M_MAINTAINABILITY_INDEX_2               => 0,
+        self::M_MAINTAINABILITY_INDEX_2_1             => 0,
+        self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_1   => 0,
+        self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_2   => 0,
     );
 
     /**
@@ -175,10 +182,12 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
             // Init node metrics
             $this->metrics = array();
             $this->overallMetrics = array(
+                'effort_sum' => 0,
                 'volume_sum' => 0,
                 'cnn2_sum'   => 0,
                 'loc_sum'    => 0,
                 'percm_sum'  => 0,
+                'cm_sum'     => 0,
                 'count'      => 0,
             );
 
@@ -337,18 +346,22 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
         $halsteadMetrics = $this->halsteadAnalyzer->getNodeMetrics($node);
         $locMetrics = $this->locAnalyzer->getNodeMetrics($node);
         $metrics = array(
+            'effort_avg' => $halsteadMetrics[HalsteadComplexityAnalyzer::M_HALSTEAD_EFFORT],
             'volume_avg' => $halsteadMetrics[HalsteadComplexityAnalyzer::M_HALSTEAD_VOLUME],
             'cnn2_avg'   => $this->ccnAnalyzer->getCcn2($node),
             'loc_avg'    => $locMetrics[NodeLocAnalyzer::M_NON_COMMENT_LINES_OF_CODE],
             'percm_avg'     => $locMetrics[NodeLocAnalyzer::M_COMMENT_LINES_OF_CODE] /
                 ($locMetrics[NodeLocAnalyzer::M_EXECUTABLE_LINES_OF_CODE] +
-                    $locMetrics[NodeLocAnalyzer::M_COMMENT_LINES_OF_CODE]),
+                    $locMetrics[NodeLocAnalyzer::M_COMMENT_LINES_OF_CODE]) * 100,
+            'cm_avg'     => $locMetrics[NodeLocAnalyzer::M_COMMENT_LINES_OF_CODE],
         );
         $this->addNodeMetrics($node, $metrics);
+        $this->overallMetrics['effort_sum'] += $metrics['effort_avg'];
         $this->overallMetrics['volume_sum'] += $metrics['volume_avg'];
         $this->overallMetrics['cnn2_sum'] += $metrics['cnn2_avg'];
         $this->overallMetrics['loc_sum'] += $metrics['loc_avg'];
         $this->overallMetrics['percm_sum'] += $metrics['percm_avg'];
+        $this->overallMetrics['cm_sum'] += $metrics['cm_avg'];
         $this->overallMetrics['count']++;
     }
 
@@ -368,30 +381,40 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     private function calculateAverageNodeMetrics(array $overallMetrics)
     {
         return array(
+            'effort_avg' => $overallMetrics['effort_sum'] / $overallMetrics['count'],
             'volume_avg' => $overallMetrics['volume_sum'] / $overallMetrics['count'],
             'cnn2_avg' => $overallMetrics['cnn2_sum'] / $overallMetrics['count'],
             'loc_avg' => $overallMetrics['loc_sum'] / $overallMetrics['count'],
             'percm_avg' => $overallMetrics['percm_sum'] / $overallMetrics['count'],
+            'cm_avg'     => $overallMetrics['cm_sum'] / $overallMetrics['count'],
         );
     }
 
     private function calculateMaintainabilityIndex(array $metrics)
     {
         $mi = array();
-        $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS] =
+        $mi[self::M_MAINTAINABILITY_INDEX_1] =
+            // 171 - 3.42ln(aveE) - 0.23aveV(g') - 16.2ln(aveLOC)
+            171 - 3.42 * log($metrics['effort_avg']) - 0.23 * $metrics['cnn2_avg'] - 16.2 * log($metrics['loc_avg']);
+        $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_1] =
+            // 171 - 3.42ln(aveE) - 0.23aveV(g') - 16.2ln(aveLOC) + 0.99aveCM
+            $mi[self::M_MAINTAINABILITY_INDEX_1] + 0.99 * ($metrics['cm_avg']);
+        $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_2] =
             171 - 5.2 * log($metrics['volume_avg']) - 0.23 * $metrics['cnn2_avg'] - 16.2 * log($metrics['loc_avg']);
-        $mi[self::M_MAINTAINABILITY_INDEX] = $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS] + 50 * sin(sqrt(2.46 * $metrics['percm_avg']));
-        $mi[self::M_MAINTAINABILITY_INDEX2] = $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS] + 50 * sin(sqrt(0.20 * $metrics['percm_avg']));
+        $mi[self::M_MAINTAINABILITY_INDEX_2] = $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_2] + 50 * sin(sqrt(2.46 * $metrics['percm_avg']));
+        $mi[self::M_MAINTAINABILITY_INDEX_2_1] = $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_2] + 50 * sin(sqrt(0.20 * $metrics['percm_avg']));
         return $mi;
     }
 
     private function calculateOverallMetricsDeltas(array $metricsState)
     {
         return array(
+            'effort_sum' => $this->overallMetrics['effort_sum'] - $metricsState['effort_sum'],
             'volume_sum' => $this->overallMetrics['volume_sum'] - $metricsState['volume_sum'],
             'cnn2_sum'   => $this->overallMetrics['cnn2_sum'] - $metricsState['cnn2_sum'],
             'loc_sum'    => $this->overallMetrics['loc_sum'] - $metricsState['loc_sum'],
             'percm_sum'  => $this->overallMetrics['percm_sum'] - $metricsState['percm_sum'],
+            'cm_sum'     => $this->overallMetrics['cm_sum'] - $metricsState['cm_sum'],
             'count'      => $this->overallMetrics['count'] - $metricsState['count'],
         );
     }
