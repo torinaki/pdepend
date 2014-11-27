@@ -54,6 +54,7 @@ use PDepend\Source\AST\ASTFunction;
 use PDepend\Source\AST\ASTIfStatement;
 use PDepend\Source\AST\ASTInterface;
 use PDepend\Source\AST\ASTMethod;
+use PDepend\Source\AST\ASTNamespace;
 use PDepend\Source\AST\ASTScope;
 use PDepend\Source\AST\ASTScopeStatement;
 use PDepend\Source\AST\ASTTrait;
@@ -128,9 +129,10 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     /**
      * Class/trait metrics template
      *
+     * @const
      * @var array
      */
-    private $classMetrics = array(
+    private static $nodeMetricsTemplate = array(
         self::M_HALSTEAD_LENGTH => 0,
         self::M_HALSTEAD_VOLUME => 0,
         self::M_HALSTEAD_BUGS   => 0,
@@ -190,6 +192,33 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
     }
 
     /**
+     * Visits a namespace node.
+     *
+     * @param ASTNamespace $namespace
+     * @return void
+     */
+    public function visitNamespace(ASTNamespace $namespace)
+    {
+        $this->fireStartNamespace($namespace);
+
+        $this->metrics[$namespace->getId()] = self::$nodeMetricsTemplate;
+        foreach ($namespace->getClasses() as $class) {
+            $class->accept($this);
+            $this->recalculateOverallMetrics($this->metrics[$namespace->getId()], $class->getId());
+        }
+        foreach ($namespace->getTraits() as $trait) {
+            $trait->accept($this);
+            $this->recalculateOverallMetrics($this->metrics[$namespace->getId()], $trait->getId());
+        }
+        foreach ($namespace->getFunctions() as $function) {
+            $function->accept($this);
+            $this->recalculateOverallMetrics($this->metrics[$namespace->getId()], $function->getId());
+        }
+
+        $this->fireEndNamespace($namespace);
+    }
+
+    /**
      * Visits a function node.
      *
      * @param \PDepend\Source\AST\ASTFunction $function
@@ -230,7 +259,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
 
         $class->getCompilationUnit()->accept($this);
 
-        $this->metrics[$class->getId()] = $this->classMetrics;
+        $this->metrics[$class->getId()] = self::$nodeMetricsTemplate;
         foreach ($class->getMethods() as $method) {
             $method->accept($this);
             $this->recalculateOverallMetrics($this->metrics[$class->getId()], $method->getId());
@@ -252,7 +281,7 @@ class HalsteadComplexityAnalyzer extends AbstractCachingAnalyzer implements Anal
 
         $trait->getCompilationUnit()->accept($this);
 
-        $this->metrics[$trait->getId()] = $this->classMetrics;
+        $this->metrics[$trait->getId()] = self::$nodeMetricsTemplate;
         foreach ($trait->getMethods() as $method) {
             $method->accept($this);
             $this->recalculateOverallMetrics($this->metrics[$trait->getId()], $method->getId());
