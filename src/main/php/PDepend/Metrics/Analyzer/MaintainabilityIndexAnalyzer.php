@@ -174,6 +174,10 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
             $this->loadCache();
             $this->fireStartAnalyzer();
 
+            if (!$this->ccnAnalyzer || !$this->halsteadAnalyzer || !$this->locAnalyzer || !$this->nodeCountAnalyzer) {
+                throw new \RuntimeException('Not all required analyzers was added');
+            }
+
             $this->ccnAnalyzer->analyze($namespaces);
             $this->halsteadAnalyzer->analyze($namespaces);
             $this->locAnalyzer->analyze($namespaces);
@@ -345,14 +349,13 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     {
         $halsteadMetrics = $this->halsteadAnalyzer->getNodeMetrics($node);
         $locMetrics = $this->locAnalyzer->getNodeMetrics($node);
+        $loc = $locMetrics[NodeLocAnalyzer::M_EXECUTABLE_LINES_OF_CODE] + $locMetrics[NodeLocAnalyzer::M_COMMENT_LINES_OF_CODE];
         $metrics = array(
             'effort_avg' => $halsteadMetrics[HalsteadComplexityAnalyzer::M_HALSTEAD_EFFORT],
             'volume_avg' => $halsteadMetrics[HalsteadComplexityAnalyzer::M_HALSTEAD_VOLUME],
             'cnn2_avg'   => $this->ccnAnalyzer->getCcn2($node),
-            'loc_avg'    => $locMetrics[NodeLocAnalyzer::M_NON_COMMENT_LINES_OF_CODE],
-            'percm_avg'     => $locMetrics[NodeLocAnalyzer::M_COMMENT_LINES_OF_CODE] /
-                ($locMetrics[NodeLocAnalyzer::M_EXECUTABLE_LINES_OF_CODE] +
-                    $locMetrics[NodeLocAnalyzer::M_COMMENT_LINES_OF_CODE]) * 100,
+            'loc_avg'    => $loc,
+            'percm_avg'  => $locMetrics[NodeLocAnalyzer::M_COMMENT_LINES_OF_CODE] / ($loc) * 100,
             'cm_avg'     => $locMetrics[NodeLocAnalyzer::M_COMMENT_LINES_OF_CODE],
         );
         $this->addNodeMetrics($node, $metrics);
@@ -393,12 +396,13 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     private function calculateMaintainabilityIndex(array $metrics)
     {
         $mi = array();
-        $mi[self::M_MAINTAINABILITY_INDEX_1] =
+        $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_1] =
             // 171 - 3.42ln(aveE) - 0.23aveV(g') - 16.2ln(aveLOC)
             171 - 3.42 * log($metrics['effort_avg']) - 0.23 * $metrics['cnn2_avg'] - 16.2 * log($metrics['loc_avg']);
-        $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_1] =
+        $mi[self::M_MAINTAINABILITY_INDEX_1] =
             // 171 - 3.42ln(aveE) - 0.23aveV(g') - 16.2ln(aveLOC) + 0.99aveCM
-            $mi[self::M_MAINTAINABILITY_INDEX_1] + 0.99 * ($metrics['cm_avg']);
+            $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_1] + 0.99 * ($metrics['cm_avg']);
+
         $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_2] =
             171 - 5.2 * log($metrics['volume_avg']) - 0.23 * $metrics['cnn2_avg'] - 16.2 * log($metrics['loc_avg']);
         $mi[self::M_MAINTAINABILITY_INDEX_2] = $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_2] + 50 * sin(sqrt(2.46 * $metrics['percm_avg']));

@@ -90,7 +90,8 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
         $namespace = new ASTNamespace('package1');
         $namespaces = new ASTArtifactList(array($namespace));
 
-        $analyzer = new ClassLevelAnalyzer();
+        $analyzer = new MaintainabilityIndexAnalyzer();
+        $analyzer->setCache($this->cache);
         $analyzer->analyze($namespaces);
     }
 
@@ -103,7 +104,8 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
      */
     public function testAddAnalyzerFailsForAnInvalidAnalyzerTypeFail()
     {
-        $analyzer = new ClassLevelAnalyzer();
+        $analyzer = new MaintainabilityIndexAnalyzer();
+        $analyzer->setCache($this->cache);
         $analyzer->addAnalyzer(new CodeRankAnalyzer());
     }
 
@@ -114,9 +116,14 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
      */
     public function testGetRequiredAnalyzersReturnsExpectedClassNames()
     {
-        $analyzer = new ClassLevelAnalyzer();
+        $analyzer = new MaintainabilityIndexAnalyzer();
         $this->assertEquals(
-            array('PDepend\\Metrics\\Analyzer\\CyclomaticComplexityAnalyzer'),
+            array(
+                'PDepend\\Metrics\\Analyzer\\HalsteadComplexityAnalyzer',
+                'PDepend\\Metrics\\Analyzer\\NodeCountAnalyzer',
+                'PDepend\\Metrics\\Analyzer\\CyclomaticComplexityAnalyzer',
+                'PDepend\\Metrics\\Analyzer\\NodeLocAnalyzer',
+            ),
             $analyzer->getRequiredAnalyzers()
         );
     }
@@ -144,39 +151,103 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
         $analyzer = $this->_createAnalyzer();
         $analyzer->analyze($namespaces);
 
-        $actual   = array();
         $expected = array(
-
+            '+global'      => array(
+                'minc'  => 129.71484571566,
+                'mi'    => 131.69484571566,
+                'minc2' => 125.56273837974,
+                'mi2'   => 143.61520224367,
+                'mi21'  => 152.10526020849,
+            ),
+            'testFunction' => array(
+                'minc'  => 129.71484571566,
+                'mi'    => 131.69484571566,
+                'minc2' => 125.56273837974,
+                'mi2'   => 143.61520224367,
+                'mi21'  => 152.10526020849,
+            )
         );
 
+        $actual = $this->collectAnalyzerMetrics($analyzer, $namespaces);
+
+        ksort($expected);
+        ksort($actual);
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    /**
+     * Tests that the analyzer calculates the correct operators and operands counts.
+     *
+     * @return void
+     */
+    public function testCalculateClassMaintainabilityIndex()
+    {
+        $namespaces = $this->parseCodeResourceForTest();
+
+        $analyzer = $this->_createAnalyzer();
+        $analyzer->analyze($namespaces);
+
+        $expected = array(
+            'Test'      => array(
+                'minc'  => 129.71484571566,
+                'mi'    => 131.69484571566,
+                'minc2' => 125.56273837974,
+                'mi2'   => 143.61520224367,
+                'mi21'  => 152.10526020849,
+            ),
+            'TestClass::testMethod' => array(
+                'minc'  => 129.71484571566,
+                'mi'    => 131.69484571566,
+                'minc2' => 125.56273837974,
+                'mi2'   => 143.61520224367,
+                'mi21'  => 152.10526020849,
+            )
+        );
+
+        $actual = $this->collectAnalyzerMetrics($analyzer, $namespaces);
+
+
+        ksort($expected);
+        ksort($actual);
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    /**
+     * @param MaintainabilityIndexAnalyzer $analyzer
+     * @param ASTNamespace[]               $namespaces
+     *
+     * @return array
+     */
+    private function collectAnalyzerMetrics(MaintainabilityIndexAnalyzer $analyzer, $namespaces)
+    {
+        $metrics = array();
         foreach ($namespaces as $namespace) {
-            $actual[$namespace->getName()] = $analyzer->getNodeMetrics($namespace);
+            $metrics[$namespace->getName()] = $analyzer->getNodeMetrics($namespace);
         }
         foreach ($namespaces[0]->getFunctions() as $function) {
-            $actual[$function->getName()] = $analyzer->getNodeMetrics($function);
+            $metrics[$function->getName()] = $analyzer->getNodeMetrics($function);
         }
         foreach ($namespaces[0]->getClasses() as $class) {
             $className = $class->getName();
             foreach ($class->getAllMethods() as $method) {
-                $actual[$className . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+                $metrics[$className . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
             }
         }
         foreach ($namespaces[0]->getTraits() as $trait) {
             $traitName = $trait->getName();
             foreach ($trait->getAllMethods() as $method) {
-                $actual[$traitName . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+                $metrics[$traitName . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
             }
         }
         foreach ($namespaces[0]->getInterfaces() as $class) {
             $className = $class->getName();
             foreach ($class->getAllMethods() as $method) {
-                $actual[$className . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+                $metrics[$className . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
             }
         }
-        ksort($expected);
-        ksort($actual);
-
-        $this->assertEquals($expected, $actual);
+        return $metrics;
     }
 
     /**
