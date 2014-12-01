@@ -1,7 +1,7 @@
 <?php
-namespace Test;
+namespace Test {
 
-class TestClass
+abstract class TestClass
 {
     public function testMethod()
     {
@@ -9,5 +9,11 @@ class TestClass
         // second comment
         $a + $b;
         $c - $d;
+    }
+}
+
+    abstract class TestClass
+    {
+        abstract function testAbstract();
     }
 }

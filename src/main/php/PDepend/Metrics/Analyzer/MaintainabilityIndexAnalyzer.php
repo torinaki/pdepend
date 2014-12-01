@@ -42,7 +42,7 @@
 
 namespace PDepend\Metrics\Analyzer;
 
-use PDepend\Metrics\AbstractCachingAnalyzer;
+use PDepend\Metrics\AbstractAnalyzer;
 use PDepend\Metrics\AggregateAnalyzer;
 use PDepend\Metrics\Analyzer;
 use PDepend\Metrics\AnalyzerNodeAware;
@@ -55,6 +55,7 @@ use PDepend\Source\AST\ASTFunction;
 use PDepend\Source\AST\ASTInterface;
 use PDepend\Source\AST\ASTMethod;
 use PDepend\Source\AST\ASTNamespace;
+use PDepend\Source\AST\ASTScope;
 use PDepend\Source\AST\ASTTrait;
 
 /**
@@ -66,7 +67,7 @@ use PDepend\Source\AST\ASTTrait;
  *
  * @method int visit() visit(\PDepend\Source\AST\ASTNode $int1, array $int2)
  */
-class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements AggregateAnalyzer, AnalyzerNodeAware, AnalyzerProjectAware
+class MaintainabilityIndexAnalyzer extends AbstractAnalyzer implements AggregateAnalyzer, AnalyzerNodeAware, AnalyzerProjectAware
 {
     /**
      * Type of this analyzer class.
@@ -122,6 +123,27 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     private $overallMetrics = array();
 
     /**
+     * Template of empty metrics.
+     *
+     * @var array
+     */
+    private static $emptyMetrics = array(
+        'effort_avg' => 0,
+        'volume_avg' => 0,
+        'cnn2_avg'   => 0,
+        'loc_avg'    => 0,
+        'percm_avg'  => 0,
+        'cm_avg'     => 0,
+    );
+
+    /**
+     * Collected node metrics
+     *
+     * @var array
+     */
+    protected $metrics = null;
+
+    /**
      * Returns an array with analyzer class names that are required by the MI analyzer.
      *
      * @return array(string)
@@ -163,7 +185,6 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     public function analyze($namespaces)
     {
         if ($this->metrics === null) {
-            $this->loadCache();
             $this->fireStartAnalyzer();
 
             if (!$this->ccnAnalyzer || !$this->halsteadAnalyzer || !$this->locAnalyzer) {
@@ -192,7 +213,6 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
             $this->updateProjectMetrics();
 
             $this->fireEndAnalyzer();
-            $this->unloadCache();
         }
     }
 
@@ -312,9 +332,7 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     {
         $this->fireStartFunction($function);
 
-        if (false === $this->restoreFromCache($function)) {
-            $this->addCallableNodeMetrics($function);
-        }
+        $this->addCallableNodeMetrics($function);
 
         $this->fireEndFunction($function);
     }
@@ -329,15 +347,19 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     {
         $this->fireStartMethod($method);
 
-        if (false === $this->restoreFromCache($method)) {
-            $this->addCallableNodeMetrics($method);
-        }
+        $this->addCallableNodeMetrics($method);
 
         $this->fireEndMethod($method);
     }
 
     private function addCallableNodeMetrics(AbstractASTCallable $node)
     {
+        $children = $node->getChildren();
+        if (!isset($children[1]) || !$children[1] instanceof ASTScope || !$children[1]->getChildren()) {
+            // ignore empty and abstract methods
+            $this->addNodeMetrics($node, self::$emptyMetrics);
+            return;
+        }
         $halsteadMetrics = $this->halsteadAnalyzer->getNodeMetrics($node);
         $locMetrics = $this->locAnalyzer->getNodeMetrics($node);
         $loc = $locMetrics[NodeLocAnalyzer::M_EXECUTABLE_LINES_OF_CODE] + $locMetrics[NodeLocAnalyzer::M_COMMENT_LINES_OF_CODE];
@@ -374,19 +396,31 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
 
     private function calculateAverageNodeMetrics(array $overallMetrics)
     {
+        if (!$overallMetrics['count']) {
+            return self::$emptyMetrics;
+        }
         return array(
             'effort_avg' => $overallMetrics['effort_sum'] / $overallMetrics['count'],
             'volume_avg' => $overallMetrics['volume_sum'] / $overallMetrics['count'],
-            'cnn2_avg' => $overallMetrics['cnn2_sum'] / $overallMetrics['count'],
-            'loc_avg' => $overallMetrics['loc_sum'] / $overallMetrics['count'],
-            'percm_avg' => $overallMetrics['percm_sum'] / $overallMetrics['count'],
+            'cnn2_avg'   => $overallMetrics['cnn2_sum'] / $overallMetrics['count'],
+            'loc_avg'    => $overallMetrics['loc_sum'] / $overallMetrics['count'],
+            'percm_avg'  => $overallMetrics['percm_sum'] / $overallMetrics['count'],
             'cm_avg'     => $overallMetrics['cm_sum'] / $overallMetrics['count'],
         );
     }
 
     private function calculateMaintainabilityIndex(array $metrics)
     {
-        $mi = array();
+        $mi = array(
+            self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_1 => 0,
+            self::M_MAINTAINABILITY_INDEX_1 => 0,
+            self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_2 => 0,
+            self::M_MAINTAINABILITY_INDEX_2 => 0,
+            self::M_MAINTAINABILITY_INDEX_2_1 => 0,
+        );
+        if (!$metrics['loc_avg']) {
+            return $mi;
+        }
         $mi[self::M_MAINTAINABILITY_INDEX_NO_COMMENTS_1] =
             // 171 - 3.42ln(aveE) - 0.23aveV(g') - 16.2ln(aveLOC)
             171 - 3.42 * log($metrics['effort_avg']) - 0.23 * $metrics['cnn2_avg'] - 16.2 * log($metrics['loc_avg']);

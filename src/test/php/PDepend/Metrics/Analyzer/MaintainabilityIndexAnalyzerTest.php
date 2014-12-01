@@ -91,7 +91,6 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
         $namespaces = new ASTArtifactList(array($namespace));
 
         $analyzer = new MaintainabilityIndexAnalyzer();
-        $analyzer->setCache($this->cache);
         $analyzer->analyze($namespaces);
     }
 
@@ -105,7 +104,6 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
     public function testAddAnalyzerFailsForAnInvalidAnalyzerTypeFail()
     {
         $analyzer = new MaintainabilityIndexAnalyzer();
-        $analyzer->setCache($this->cache);
         $analyzer->addAnalyzer(new CodeRankAnalyzer());
     }
 
@@ -201,7 +199,14 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
                 'minc2' => 125.56273837974,
                 'mi2'   => 143.61520224367,
                 'mi21'  => 152.10526020849,
-            )
+            ),
+            'TestClass::testAbstract' => array(
+                'minc'  => 0,
+                'mi'    => 0,
+                'minc2' => 0,
+                'mi2'   => 0,
+                'mi21'  => 0,
+            ),
         );
 
         $actual = $this->collectAnalyzerMetrics($analyzer, $namespaces);
@@ -209,6 +214,28 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
 
         ksort($expected);
         ksort($actual);
+
+        $this->assertEquals($expected, $actual);
+    }
+
+    /**
+     * Tests that the analyzer aggregates the correct project metrics.
+     *
+     * @return void
+     */
+    public function testCalculateProjectMetrics()
+    {
+        $analyzer = $this->_createAnalyzer();
+        $analyzer->analyze(self::parseTestCaseSource(__METHOD__));
+
+        $expected = array(
+            'minc'  => 129.71484571566,
+            'mi'    => 131.69484571566,
+            'minc2' => 125.56273837974,
+            'mi2'   => 143.61520224367,
+            'mi21'  => 152.10526020849,
+        );
+        $actual   = $analyzer->getProjectMetrics();
 
         $this->assertEquals($expected, $actual);
     }
@@ -224,26 +251,27 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
         $metrics = array();
         foreach ($namespaces as $namespace) {
             $metrics[$namespace->getName()] = $analyzer->getNodeMetrics($namespace);
-        }
-        foreach ($namespaces[0]->getFunctions() as $function) {
-            $metrics[$function->getName()] = $analyzer->getNodeMetrics($function);
-        }
-        foreach ($namespaces[0]->getClasses() as $class) {
-            $className = $class->getName();
-            foreach ($class->getAllMethods() as $method) {
-                $metrics[$className . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+
+            foreach ($namespace->getFunctions() as $function) {
+                $metrics[$function->getName()] = $analyzer->getNodeMetrics($function);
             }
-        }
-        foreach ($namespaces[0]->getTraits() as $trait) {
-            $traitName = $trait->getName();
-            foreach ($trait->getAllMethods() as $method) {
-                $metrics[$traitName . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+            foreach ($namespace->getClasses() as $class) {
+                $className = $class->getName();
+                foreach ($class->getAllMethods() as $method) {
+                    $metrics[$className . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+                }
             }
-        }
-        foreach ($namespaces[0]->getInterfaces() as $class) {
-            $className = $class->getName();
-            foreach ($class->getAllMethods() as $method) {
-                $metrics[$className . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+            foreach ($namespace->getTraits() as $trait) {
+                $traitName = $trait->getName();
+                foreach ($trait->getAllMethods() as $method) {
+                    $metrics[$traitName . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+                }
+            }
+            foreach ($namespace->getInterfaces() as $class) {
+                $className = $class->getName();
+                foreach ($class->getAllMethods() as $method) {
+                    $metrics[$className . '::' . $method->getName()] = $analyzer->getNodeMetrics($method);
+                }
             }
         }
         return $metrics;
@@ -267,7 +295,6 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
         $locAnalyzer->setCache($this->cache);
 
         $analyzer = new MaintainabilityIndexAnalyzer();
-        $analyzer->setCache($this->cache);
         $analyzer->addAnalyzer($ccnAnalyzer);
         $analyzer->addAnalyzer($hcAnalyzer);
         $analyzer->addAnalyzer($locAnalyzer);
