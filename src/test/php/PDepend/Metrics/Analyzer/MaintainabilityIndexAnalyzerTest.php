@@ -120,7 +120,6 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
         $this->assertEquals(
             array(
                 'PDepend\\Metrics\\Analyzer\\HalsteadComplexityAnalyzer',
-                'PDepend\\Metrics\\Analyzer\\NodeCountAnalyzer',
                 'PDepend\\Metrics\\Analyzer\\CyclomaticComplexityAnalyzer',
                 'PDepend\\Metrics\\Analyzer\\NodeLocAnalyzer',
             ),
@@ -264,8 +263,6 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
         $hcAnalyzer = new HalsteadComplexityAnalyzer();
         $hcAnalyzer->setCache($this->cache);
 
-        $nodeAnalyzer = new NodeCountAnalyzer();
-
         $locAnalyzer = new NodeLocAnalyzer();
         $locAnalyzer->setCache($this->cache);
 
@@ -273,7 +270,6 @@ class MaintainabilityIndexAnalyzerTest extends AbstractMetricsTest
         $analyzer->setCache($this->cache);
         $analyzer->addAnalyzer($ccnAnalyzer);
         $analyzer->addAnalyzer($hcAnalyzer);
-        $analyzer->addAnalyzer($nodeAnalyzer);
         $analyzer->addAnalyzer($locAnalyzer);
 
         return $analyzer;

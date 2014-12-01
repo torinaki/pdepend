@@ -105,11 +105,6 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     private $halsteadAnalyzer;
 
     /**
-     * @var NodeCountAnalyzer
-     */
-    private $nodeCountAnalyzer;
-
-    /**
      * @var CyclomaticComplexityAnalyzer
      */
     private $ccnAnalyzer;
@@ -135,7 +130,6 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     {
         return array(
             'PDepend\\Metrics\\Analyzer\\HalsteadComplexityAnalyzer',
-            'PDepend\\Metrics\\Analyzer\\NodeCountAnalyzer',
             'PDepend\\Metrics\\Analyzer\\CyclomaticComplexityAnalyzer',
             'PDepend\\Metrics\\Analyzer\\NodeLocAnalyzer',
         );
@@ -151,8 +145,6 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
     {
         if ($analyzer instanceof HalsteadComplexityAnalyzer) {
             $this->halsteadAnalyzer = $analyzer;
-        } elseif ($analyzer instanceof NodeCountAnalyzer) {
-            $this->nodeCountAnalyzer = $analyzer;
         } elseif ($analyzer instanceof CyclomaticComplexityAnalyzer) {
             $this->ccnAnalyzer = $analyzer;
         } elseif ($analyzer instanceof NodeLocAnalyzer) {
@@ -174,14 +166,13 @@ class MaintainabilityIndexAnalyzer extends AbstractCachingAnalyzer implements Ag
             $this->loadCache();
             $this->fireStartAnalyzer();
 
-            if (!$this->ccnAnalyzer || !$this->halsteadAnalyzer || !$this->locAnalyzer || !$this->nodeCountAnalyzer) {
+            if (!$this->ccnAnalyzer || !$this->halsteadAnalyzer || !$this->locAnalyzer) {
                 throw new \RuntimeException('Not all required analyzers was added');
             }
 
             $this->ccnAnalyzer->analyze($namespaces);
             $this->halsteadAnalyzer->analyze($namespaces);
             $this->locAnalyzer->analyze($namespaces);
-            $this->nodeCountAnalyzer->analyze($namespaces);
 
             // Init node metrics
             $this->metrics = array();
