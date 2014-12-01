@@ -114,6 +114,15 @@
 
         <service id="pdepend.analyzer.maintainability" class="PDepend\Metrics\Analyzer\MaintainabilityIndexAnalyzer">
             <tag name="pdepend.analyzer" />
+            <call method="addAnalyzer">
+                <argument type="service" id="pdepend.analyzer.cyclomatic_complexity" />
+            </call>
+            <call method="addAnalyzer">
+                <argument type="service" id="pdepend.analyzer.halstead_complexity" />
+            </call>
+            <call method="addAnalyzer">
+                <argument type="service" id="pdepend.analyzer.node_loc" />
+            </call>
         </service>
     </services>
 </container>
